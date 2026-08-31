@@ -1612,16 +1612,7 @@ export default function App() {
           lineHeight: 1.6,
         }}
       >
-        <p style={{ margin: 0 }}>
-          Data note: Eid Milad-un-Nabi
-          (12 Rabi al-Awwal 1448 AH)
-          falls approximately 25–26 August
-          2026 per Pakistan moon-sighting
-          forecasts, and is therefore not
-          shown in this September calendar.
-          Defence Day is observed on September
-          6 every year.
-        </p>
+       
       </div>
     </div>
   );
