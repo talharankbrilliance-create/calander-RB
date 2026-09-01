@@ -1,8 +1,10 @@
+
+```jsx
 import React, { useState, useEffect, useCallback } from "react";
 
 /* =========================================================
    RB OFFICE CALENDAR — SEPTEMBER TO DECEMBER 2026
-   RESPONSIVE / NO PAGE SCROLL VERSION
+   COMPACT + FULL SCREEN + MOBILE RESPONSIVE
    ========================================================= */
 
 // ─────────────────────────────────────────────
@@ -295,9 +297,9 @@ const inputStyle = {
   background: "rgba(255,255,255,0.045)",
   border: `1px solid ${C.border}`,
   borderRadius: 8,
-  padding: "10px 12px",
+  padding: "9px 11px",
   color: C.white,
-  fontSize: 13,
+  fontSize: 12,
   outline: "none",
   width: "100%",
   boxSizing: "border-box",
@@ -379,17 +381,8 @@ export default function App() {
       const map = {};
 
       (rows || []).forEach((row) => {
-        if (!row.event_date) return;
-
-        const event = rowToEvent(row);
-
-        /*
-         * One event per date is assumed by this calendar.
-         * If multiple rows exist on the same date,
-         * keep the first one.
-         */
-        if (!map[row.event_date]) {
-          map[row.event_date] = event;
+        if (row.event_date) {
+          map[row.event_date] = rowToEvent(row);
         }
       });
 
@@ -397,10 +390,7 @@ export default function App() {
       setError(null);
     } catch (e) {
       console.error("Fetch events failed:", e);
-
-      setError(
-        "Could not load events from database."
-      );
+      setError("Could not load events from database.");
     }
 
     setLoaded(true);
@@ -435,7 +425,6 @@ export default function App() {
     });
 
     setEditing(null);
-    setError(null);
   };
 
   // ─────────────────────────────────────────────
@@ -454,13 +443,8 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const handleLogin = async () => {
-    if (
-      !loginForm.email.trim() ||
-      !loginForm.password
-    ) {
-      setLoginError(
-        "Please enter email and password."
-      );
+    if (!loginForm.email || !loginForm.password) {
+      setLoginError("Please enter email and password.");
       return;
     }
 
@@ -473,7 +457,7 @@ export default function App() {
         {
           method: "POST",
           body: JSON.stringify({
-            email: loginForm.email.trim(),
+            email: loginForm.email,
             password: loginForm.password,
           }),
         }
@@ -516,7 +500,6 @@ export default function App() {
     setEditing(null);
     setSelected(null);
     setShowLogin(false);
-    setLoginError(null);
   };
 
   // ─────────────────────────────────────────────
@@ -535,13 +518,6 @@ export default function App() {
     if (OFFICIAL_EVENTS[selectedKey]) {
       setError(
         "This is an official event and cannot be edited."
-      );
-      return;
-    }
-
-    if (dbEvents[selectedKey]) {
-      setError(
-        "This date already has an event."
       );
       return;
     }
@@ -585,8 +561,7 @@ export default function App() {
     if (
       !form.name.trim() ||
       !selected ||
-      !isAdmin ||
-      saving
+      !isAdmin
     ) {
       return;
     }
@@ -609,15 +584,16 @@ export default function App() {
         event_name: form.name.trim(),
         event_type:
           form.type.trim() || "Custom Event",
+
         is_public_holiday:
-          holidayText.includes(
-            "public holiday"
-          ) &&
+          holidayText.includes("public holiday") &&
           !holidayText.includes("not"),
+
         description:
           form.description.trim(),
+
         is_office_event:
-          Boolean(form.isOffice),
+          form.isOffice,
       };
 
       const existing = dbEvents[key];
@@ -635,18 +611,6 @@ export default function App() {
           session.access_token
         );
       } else {
-        if (OFFICIAL_EVENTS[key]) {
-          throw new Error(
-            "Official dates cannot be overwritten."
-          );
-        }
-
-        if (existing) {
-          throw new Error(
-            "An event already exists on this date."
-          );
-        }
-
         await sbFetch(
           "/rest/v1/events",
           {
@@ -658,6 +622,7 @@ export default function App() {
       }
 
       setEditing(null);
+
       await fetchEvents();
     } catch (e) {
       console.error("Save failed:", e);
@@ -675,13 +640,7 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const deleteEvent = async () => {
-    if (
-      !selected ||
-      !isAdmin ||
-      saving
-    ) {
-      return;
-    }
+    if (!selected || !isAdmin) return;
 
     const key = dateKey(
       YEAR,
@@ -733,13 +692,7 @@ export default function App() {
     newMonth,
     newDay
   ) => {
-    if (
-      !selected ||
-      !isAdmin ||
-      saving
-    ) {
-      return;
-    }
+    if (!selected || !isAdmin) return;
 
     const oldKey = dateKey(
       YEAR,
@@ -751,22 +704,14 @@ export default function App() {
 
     if (!event) return;
 
-    const dayNumber = parseInt(
-      newDay,
-      10
-    );
-
-    const monthNumber = parseInt(
-      newMonth,
-      10
-    );
+    const dayNumber = parseInt(newDay, 10);
+    const monthNumber = parseInt(newMonth, 10);
 
     if (
       !MONTHS.some(
         (m) => m.month === monthNumber
       )
     ) {
-      setError("Invalid month.");
       return;
     }
 
@@ -781,9 +726,6 @@ export default function App() {
       dayNumber < 1 ||
       dayNumber > maxDays
     ) {
-      setError(
-        `Please enter a valid day between 1 and ${maxDays}.`
-      );
       return;
     }
 
@@ -848,28 +790,28 @@ export default function App() {
       )
     : null;
 
-  // =========================================================
+  // ─────────────────────────────────────────────
   // RENDER
-  // =========================================================
+  // ─────────────────────────────────────────────
 
   return (
-    <div className="app-shell">
+    <div className="app">
 
       {/* =================================================
           HEADER
           ================================================= */}
 
-      <header className="top-header">
+      <header className="header">
         <div className="header-inner">
 
           {/* BRAND */}
 
           <div className="brand">
 
-            <div className="brand-logo">
+            <div className="logo">
               <svg
-                width="36"
-                height="36"
+                width="32"
+                height="32"
                 viewBox="0 0 36 36"
               >
                 <text
@@ -896,9 +838,8 @@ export default function App() {
               </svg>
             </div>
 
-            <div className="brand-copy">
-
-              <div className="eyebrow">
+            <div className="brand-text">
+              <div className="brand-small">
                 Office Planning
               </div>
 
@@ -907,11 +848,11 @@ export default function App() {
               </h1>
 
               <p>
-                Plan meetings, office activities,
+                Meetings, office activities,
                 travel & important events
               </p>
-
             </div>
+
           </div>
 
           {/* ADMIN */}
@@ -919,7 +860,7 @@ export default function App() {
           <div className="admin-area">
 
             {saving && (
-              <span className="saving-label">
+              <span className="saving-text">
                 Saving…
               </span>
             )}
@@ -956,14 +897,12 @@ export default function App() {
             {showLogin && !isAdmin && (
               <div className="login-panel">
 
-                <div className="login-heading">
-                  <div className="login-title">
-                    Admin Login
-                  </div>
+                <div className="login-title">
+                  Admin Login
+                </div>
 
-                  <div className="login-subtitle">
-                    Sign in to manage office events
-                  </div>
+                <div className="login-subtitle">
+                  Sign in to manage office events
                 </div>
 
                 <input
@@ -976,7 +915,7 @@ export default function App() {
                       email: e.target.value,
                     })
                   }
-                  className="form-input"
+                  className="login-input"
                 />
 
                 <input
@@ -994,7 +933,7 @@ export default function App() {
                       handleLogin();
                     }
                   }}
-                  className="form-input"
+                  className="login-input"
                 />
 
                 {loginError && (
@@ -1008,7 +947,7 @@ export default function App() {
                   <button
                     onClick={handleLogin}
                     disabled={loginLoading}
-                    className="primary-btn"
+                    className="sign-in-btn"
                   >
                     {loginLoading
                       ? "Signing in…"
@@ -1020,15 +959,18 @@ export default function App() {
                       setShowLogin(false);
                       setLoginError(null);
                     }}
-                    className="secondary-btn"
+                    className="cancel-btn"
                   >
                     Cancel
                   </button>
 
                 </div>
+
               </div>
             )}
+
           </div>
+
         </div>
       </header>
 
@@ -1036,14 +978,14 @@ export default function App() {
           MAIN
           ================================================= */}
 
-      <main className="main-content">
+      <main className="main">
 
         {/* INTRO */}
 
-        <section className="intro-section">
+        <section className="intro">
 
           <div>
-            <div className="section-label">
+            <div className="intro-label">
               OFFICE CALENDAR · {YEAR}
             </div>
 
@@ -1054,7 +996,7 @@ export default function App() {
           </div>
 
           {isAdmin && (
-            <div className="admin-status">
+            <div className="manage-status">
               ● You can manage events
             </div>
           )}
@@ -1079,15 +1021,14 @@ export default function App() {
                 }
                 className={
                   active
-                    ? "month-tab active"
-                    : "month-tab"
+                    ? "month-btn active"
+                    : "month-btn"
                 }
               >
                 {month.name}
-
-                <span>
+                <small>
                   {YEAR}
-                </span>
+                </small>
               </button>
             );
           })}
@@ -1110,15 +1051,15 @@ export default function App() {
 
           {/* TITLE */}
 
-          <div className="calendar-titlebar">
+          <div className="calendar-title">
 
             <div>
-              <div className="calendar-title">
+              <div className="calendar-month">
                 {currentMonth.name} {YEAR}
               </div>
 
-              <div className="calendar-subtitle">
-                Click any date to view details
+              <div className="calendar-hint">
+                Click a date to view details
               </div>
             </div>
 
@@ -1130,40 +1071,43 @@ export default function App() {
 
           </div>
 
-          {/* CALENDAR SCROLL CONTAINER */}
+          {/* DAYS */}
 
-          <div className="calendar-scroll">
+          <div className="days-header">
 
-            <div className="calendar-grid">
+            {DAYS_HEADER.map(
+              (dayName, index) => (
+                <div
+                  key={dayName}
+                  className={
+                    index >= 5
+                      ? index === 6
+                        ? "day-head sunday"
+                        : "day-head saturday"
+                      : "day-head"
+                  }
+                >
+                  <span className="day-full">
+                    {dayName}
+                  </span>
 
-              {/* DAY HEADERS */}
+                  <span className="day-short">
+                    {dayName.charAt(0)}
+                  </span>
+                </div>
+              )
+            )}
 
-              <div className="days-row">
+          </div>
 
-                {DAYS_HEADER.map(
-                  (dayName, index) => (
-                    <div
-                      key={dayName}
-                      className={
-                        index >= 5
-                          ? index === 6
-                            ? "day-header sunday"
-                            : "day-header saturday"
-                          : "day-header"
-                      }
-                    >
-                      {dayName}
-                    </div>
-                  )
-                )}
+          {/* CALENDAR GRID */}
 
-              </div>
+          <div className="calendar-grid">
 
-              {/* DAYS */}
-
-              {buildMonthGrid(
-                activeMonth
-              ).map((row, rowIndex) => (
+            {buildMonthGrid(
+              activeMonth
+            ).map(
+              (row, rowIndex) => (
 
                 <div
                   key={rowIndex}
@@ -1171,7 +1115,10 @@ export default function App() {
                 >
 
                   {row.map(
-                    (day, columnIndex) => {
+                    (
+                      day,
+                      columnIndex
+                    ) => {
 
                       if (!day) {
                         return (
@@ -1182,13 +1129,6 @@ export default function App() {
                         );
                       }
 
-                      const key =
-                        dateKey(
-                          YEAR,
-                          activeMonth,
-                          day
-                        );
-
                       const event =
                         getEvent(
                           activeMonth,
@@ -1198,7 +1138,8 @@ export default function App() {
                       const isSelected =
                         selected?.month ===
                           activeMonth &&
-                        selected?.day === day;
+                        selected?.day ===
+                          day;
 
                       const isWeekend =
                         columnIndex >= 5;
@@ -1230,12 +1171,10 @@ export default function App() {
 
                             <span
                               className={
-                                isSelected
-                                  ? "date-number selected-date"
-                                  : columnIndex === 6
-                                  ? "date-number sunday-date"
+                                columnIndex === 6
+                                  ? "date-number sunday"
                                   : isWeekend
-                                  ? "date-number weekend-date"
+                                  ? "date-number saturday"
                                   : "date-number"
                               }
                             >
@@ -1250,7 +1189,7 @@ export default function App() {
                                     event.color ||
                                     C.blue,
                                   boxShadow:
-                                    `0 0 8px ${
+                                    `0 0 7px ${
                                       event.color ||
                                       C.blue
                                     }`,
@@ -1264,7 +1203,7 @@ export default function App() {
 
                           {event ? (
                             <div
-                              className="event-card"
+                              className="event-box"
                               style={{
                                 background:
                                   typeStyle.background,
@@ -1289,16 +1228,14 @@ export default function App() {
 
                             </div>
                           ) : (
-                            <div className="empty-dash">
+                            <div className="no-event">
                               —
                             </div>
                           )}
 
-                          {/* BOTTOM BAR */}
-
                           {event && (
                             <div
-                              className="event-bottom-bar"
+                              className="event-line"
                               style={{
                                 background:
                                   event.color ||
@@ -1313,10 +1250,11 @@ export default function App() {
                   )}
 
                 </div>
-              ))}
+              )
+            )}
 
-            </div>
           </div>
+
         </section>
 
         {/* =================================================
@@ -1326,26 +1264,27 @@ export default function App() {
         <div className="legend">
 
           {[
-            [C.lime, "Official / National"],
-            [C.green, "Office Event"],
+            [C.lime, "Official"],
+            [C.green, "Office"],
             [C.purple, "Meeting"],
-            [C.orange, "Travel / Outside"],
+            [C.orange, "Travel"],
             [C.red, "Important"],
             [C.blue, "Custom"],
-          ].map(([color, label]) => (
-            <span
-              key={label}
-              className="legend-item"
-            >
+          ].map(
+            ([color, label]) => (
               <span
-                className="legend-line"
-                style={{
-                  background: color,
-                }}
-              />
-              {label}
-            </span>
-          ))}
+                key={label}
+                className="legend-item"
+              >
+                <i
+                  style={{
+                    background: color,
+                  }}
+                />
+                {label}
+              </span>
+            )
+          )}
 
         </div>
 
@@ -1355,30 +1294,27 @@ export default function App() {
 
         <section className="detail-panel">
 
-          {/* NOTHING SELECTED */}
-
           {!selected ? (
+
             <div>
               <div className="detail-title">
                 Select a date
               </div>
 
-              <p className="detail-description">
-                Click any date above to view
-                events or add office activities.
+              <p className="detail-muted">
+                Click any date above to view events
+                or add office activities.
               </p>
             </div>
 
           ) : editing === "add" ||
             editing === "edit" ? (
 
-            // ─────────────────────
-            // FORM
-            // ─────────────────────
+            /* FORM */
 
             <div>
 
-              <div className="form-header">
+              <div className="form-heading">
 
                 <div>
                   <div className="form-label">
@@ -1397,7 +1333,7 @@ export default function App() {
 
               </div>
 
-              <div className="event-form">
+              <div className="form-grid">
 
                 <input
                   placeholder="Event name *"
@@ -1466,11 +1402,11 @@ export default function App() {
                         e.target.value,
                     })
                   }
-                  rows={4}
-                  className="form-input full textarea"
+                  rows={3}
+                  className="form-input textarea full"
                 />
 
-                <label className="office-checkbox">
+                <label className="office-check">
                   <input
                     type="checkbox"
                     checked={form.isOffice}
@@ -1482,19 +1418,16 @@ export default function App() {
                       })
                     }
                   />
-
-                  <span>
-                    Office event
-                  </span>
+                  Office event
                 </label>
 
-                <div className="form-actions">
+                <div className="form-buttons">
 
                   <button
                     onClick={() =>
                       setEditing(null)
                     }
-                    className="secondary-btn"
+                    className="cancel-form-btn"
                   >
                     Cancel
                   </button>
@@ -1503,7 +1436,7 @@ export default function App() {
                     <button
                       onClick={deleteEvent}
                       disabled={saving}
-                      className="delete-btn"
+                      className="delete-form-btn"
                     >
                       Delete
                     </button>
@@ -1515,11 +1448,7 @@ export default function App() {
                       !form.name.trim() ||
                       saving
                     }
-                    className={
-                      form.name.trim()
-                        ? "primary-btn"
-                        : "disabled-btn"
-                    }
+                    className="save-form-btn"
                   >
                     {saving
                       ? "Saving…"
@@ -1529,20 +1458,18 @@ export default function App() {
                 </div>
 
               </div>
+
             </div>
 
           ) : selectedEvent ? (
 
-            // ─────────────────────
-            // EVENT DETAIL
-            // ─────────────────────
+            /* EVENT DETAIL */
 
             <div>
 
               <div className="detail-header">
 
                 <div>
-
                   <div className="detail-date">
                     {formatDateForDisplay(
                       selected.month,
@@ -1559,7 +1486,6 @@ export default function App() {
                   <h3>
                     {selectedEvent.name}
                   </h3>
-
                 </div>
 
                 {!selectedEvent.official &&
@@ -1572,7 +1498,7 @@ export default function App() {
                             selectedEvent
                           )
                         }
-                        className="secondary-btn"
+                        className="edit-btn"
                       >
                         Edit
                       </button>
@@ -1605,10 +1531,9 @@ export default function App() {
                     <span
                       className="tag"
                       style={{
+                        color: style.color,
                         background:
                           style.background,
-                        color:
-                          style.color,
                       }}
                     >
                       {selectedEvent.type}
@@ -1616,19 +1541,19 @@ export default function App() {
                   );
                 })()}
 
-                <span className="tag neutral">
+                <span className="tag muted-tag">
                   {selectedEvent.holiday}
                 </span>
 
                 {selectedEvent.isOffice &&
                   !selectedEvent.official && (
-                    <span className="tag office">
+                    <span className="tag office-tag">
                       Office Event
                     </span>
                   )}
 
                 {selectedEvent.official && (
-                  <span className="tag official">
+                  <span className="tag official-tag">
                     Official
                   </span>
                 )}
@@ -1638,24 +1563,25 @@ export default function App() {
               {/* DESCRIPTION */}
 
               {selectedEvent.description && (
-                <p className="event-description">
+                <p className="description">
                   {selectedEvent.description}
                 </p>
               )}
 
-              {/* ADMIN TOOLS */}
+              {/* MOVE */}
 
               {!selectedEvent.official &&
                 isAdmin && (
+
                   <div className="admin-tools">
 
-                    <div className="admin-tools-title">
+                    <div className="tools-title">
                       Admin tools
                     </div>
 
-                    <div className="move-controls">
+                    <div className="move-row">
 
-                      <span className="move-label">
+                      <span>
                         Move event to:
                       </span>
 
@@ -1676,9 +1602,7 @@ export default function App() {
                                 month.month
                               }
                             >
-                              {
-                                month.name
-                              }
+                              {month.name}
                             </option>
                           )
                         )}
@@ -1715,12 +1639,13 @@ export default function App() {
                             );
                           }
                         }}
-                        className="secondary-btn"
+                        className="move-btn"
                       >
                         Move
                       </button>
 
                     </div>
+
                   </div>
                 )}
 
@@ -1728,9 +1653,7 @@ export default function App() {
 
           ) : (
 
-            // ─────────────────────
-            // EMPTY DATE
-            // ─────────────────────
+            /* EMPTY DATE */
 
             <div>
 
@@ -1747,11 +1670,11 @@ export default function App() {
                 )}
               </div>
 
-              <div className="no-event-title">
+              <div className="empty-title">
                 No event scheduled
               </div>
 
-              <p className="detail-description">
+              <p className="detail-muted">
                 This date is available for an
                 office activity, meeting, travel
                 or custom event.
@@ -1760,7 +1683,7 @@ export default function App() {
               {isAdmin && (
                 <button
                   onClick={openAdd}
-                  className="primary-btn add-event-btn"
+                  className="add-event-btn"
                 >
                   + Add Event
                 </button>
@@ -1771,34 +1694,24 @@ export default function App() {
 
         </section>
 
-        {/* =================================================
-            FOOTER
-            ================================================= */}
+        {/* FOOTER */}
 
         <div className="footer-note">
-
           <strong>
             RB Office Calendar
           </strong>{" "}
-          — Use the calendar to keep track
-          of meetings, office activities,
-          travel, important dates and
-          national events. Admin users can
-          add and manage custom events.
-
+          — Meetings, office activities,
+          travel, important dates and national
+          events.
         </div>
 
       </main>
 
       {/* =================================================
-          STYLES
+          CSS
           ================================================= */}
 
       <style>{`
-
-        /* =================================================
-           GLOBAL
-           ================================================= */
 
         * {
           box-sizing: border-box;
@@ -1811,11 +1724,17 @@ export default function App() {
           padding: 0;
           width: 100%;
           height: 100%;
+          min-height: 100%;
           background: ${C.navy};
+        }
+
+        html {
+          overflow: hidden;
         }
 
         body {
           overflow: hidden;
+          overscroll-behavior: none;
         }
 
         button,
@@ -1826,23 +1745,11 @@ export default function App() {
         }
 
         button {
-          transition:
-            filter .15s ease,
-            transform .1s ease,
-            background .15s ease;
+          -webkit-tap-highlight-color: transparent;
         }
 
-        button:hover:not(:disabled) {
+        button:hover {
           filter: brightness(1.08);
-        }
-
-        button:active:not(:disabled) {
-          transform: translateY(1px);
-        }
-
-        button:disabled {
-          cursor: not-allowed;
-          opacity: .65;
         }
 
         input::placeholder,
@@ -1859,14 +1766,11 @@ export default function App() {
            APP
            ================================================= */
 
-        .app-shell {
+        .app {
           width: 100%;
           height: 100dvh;
-          min-height: 0;
-          display: flex;
-          flex-direction: column;
+          min-height: 100dvh;
           overflow: hidden;
-
           background:
             radial-gradient(
               circle at 50% -10%,
@@ -1874,9 +1778,7 @@ export default function App() {
               transparent 38%
             ),
             ${C.navy};
-
           color: ${C.white};
-
           font-family:
             Inter,
             system-ui,
@@ -1890,19 +1792,13 @@ export default function App() {
            HEADER
            ================================================= */
 
-        .top-header {
+        .header {
           width: 100%;
-          flex: 0 0 auto;
-
-          border-bottom:
-            1px solid ${C.border};
-
-          background:
-            rgba(8,17,38,.94);
-
-          backdrop-filter:
-            blur(12px);
-
+          height: 74px;
+          flex-shrink: 0;
+          border-bottom: 1px solid ${C.border};
+          background: rgba(8,17,38,.94);
+          backdrop-filter: blur(12px);
           position: relative;
           z-index: 50;
         }
@@ -1910,89 +1806,65 @@ export default function App() {
         .header-inner {
           width: 100%;
           max-width: 1180px;
+          height: 100%;
           margin: 0 auto;
-
-          padding:
-            14px 22px;
-
+          padding: 10px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-
-          gap: 18px;
+          gap: 15px;
         }
 
         .brand {
-          min-width: 0;
-
           display: flex;
           align-items: center;
-
-          gap: 13px;
+          gap: 11px;
+          min-width: 0;
         }
 
-        .brand-logo {
-          width: 46px;
-          height: 46px;
-          flex: 0 0 46px;
-
-          border-radius: 11px;
-
+        .logo {
+          width: 42px;
+          height: 42px;
+          border-radius: 10px;
           background:
             linear-gradient(
               135deg,
               #16264b,
               #0e1933
             );
-
-          border:
-            1px solid ${C.border};
-
+          border: 1px solid ${C.border};
           display: flex;
           align-items: center;
           justify-content: center;
-
-          box-shadow:
-            0 8px 30px rgba(0,0,0,.2);
+          flex-shrink: 0;
         }
 
-        .brand-copy {
+        .brand-text {
           min-width: 0;
         }
 
-        .eyebrow {
+        .brand-small {
           color: ${C.lime};
-
-          font-size: 9px;
+          font-size: 8px;
           font-weight: 800;
-
-          letter-spacing: 1.5px;
+          letter-spacing: 1.3px;
           text-transform: uppercase;
-
-          margin-bottom: 3px;
+          margin-bottom: 2px;
         }
 
         .brand h1 {
           margin: 0;
-
-          font-size: 21px;
-          line-height: 1.1;
-
-          font-weight: 750;
-
-          letter-spacing: -.45px;
+          font-size: 19px;
+          line-height: 1.05;
+          font-weight: 800;
+          white-space: nowrap;
         }
 
         .brand p {
-          margin: 4px 0 0;
-
+          margin: 3px 0 0;
           color: ${C.textMuted};
-
-          font-size: 11px;
-
+          font-size: 9px;
           white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
 
         /* =================================================
@@ -2001,19 +1873,15 @@ export default function App() {
 
         .admin-area {
           position: relative;
-          flex: 0 0 auto;
+          flex-shrink: 0;
         }
 
-        .saving-label {
+        .saving-text {
           position: absolute;
-
           right: 0;
-          top: -17px;
-
+          top: -14px;
+          font-size: 8px;
           color: ${C.lime};
-
-          font-size: 9px;
-          font-weight: 700;
         }
 
         .admin-actions {
@@ -2025,331 +1893,171 @@ export default function App() {
         .admin-badge {
           display: flex;
           align-items: center;
-          gap: 6px;
-
-          padding: 8px 11px;
-
+          gap: 5px;
+          padding: 7px 9px;
           border-radius: 8px;
-
-          background:
-            ${C.greenDim};
-
-          border:
-            1px solid rgba(52,211,153,.22);
-
+          background: ${C.greenDim};
+          border: 1px solid rgba(52,211,153,.22);
           color: ${C.green};
-
-          font-size: 10px;
-          font-weight: 750;
-
-          white-space: nowrap;
+          font-size: 9px;
+          font-weight: 800;
         }
 
-        .admin-btn {
-          ${/* intentionally left blank */ ""}
-        }
-
-        .admin-btn,
         .logout-btn,
-        .primary-btn,
-        .secondary-btn,
-        .delete-btn,
-        .disabled-btn {
-          ${""}
-        }
-
         .admin-btn {
-          ${""}
-        }
+          ${Object.entries(buttonBase)
+            .map(([key, value]) => {
+              const kebab = key.replace(
+                /[A-Z]/g,
+                (m) => "-" + m.toLowerCase()
+              );
+              return `${kebab}:${value};`;
+            })
+            .join("")}
 
-        .admin-btn {
-          padding: 9px 15px;
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 8px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #17264a,
-              #111d3a
-            );
-
-          color: ${C.white};
-
-          font-size: 11px;
-          font-weight: 750;
-
-          cursor: pointer;
+          padding: 7px 10px;
+          font-size: 9px;
+          font-weight: 700;
         }
 
         .logout-btn {
-          padding: 8px 12px;
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 8px;
-
+          border: 1px solid ${C.border};
           background: transparent;
-
           color: ${C.textMuted};
-
-          font-size: 10px;
-          font-weight: 650;
-
-          cursor: pointer;
         }
 
-        /* =================================================
-           LOGIN
-           ================================================= */
+        .admin-btn {
+          border: 1px solid ${C.border};
+          background: linear-gradient(
+            135deg,
+            #17264a,
+            #111d3a
+          );
+          color: ${C.white};
+          box-shadow: 0 5px 20px rgba(0,0,0,.15);
+        }
 
         .login-panel {
           position: absolute;
-
-          top: calc(100% + 9px);
+          top: calc(100% + 8px);
           right: 0;
-
-          width: min(310px, calc(100vw - 24px));
-
-          padding: 16px;
-
+          width: 285px;
           background: ${C.card};
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 12px;
-
-          box-shadow:
-            0 18px 50px rgba(0,0,0,.45);
-
+          border: 1px solid ${C.border};
+          border-radius: 11px;
+          padding: 14px;
+          box-shadow: 0 18px 50px rgba(0,0,0,.45);
           z-index: 100;
-        }
-
-        .login-heading {
-          margin-bottom: 12px;
         }
 
         .login-title {
           font-size: 13px;
-          font-weight: 750;
+          font-weight: 800;
         }
 
         .login-subtitle {
-          margin-top: 3px;
-
           color: ${C.textMuted};
-
-          font-size: 10px;
+          font-size: 9px;
+          margin-top: 3px;
+          margin-bottom: 10px;
         }
 
-        .form-input {
+        .login-input {
           width: 100%;
-
-          min-width: 0;
-
-          background:
-            rgba(255,255,255,.045);
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 8px;
-
-          padding:
-            9px 11px;
-
+          padding: 8px 10px;
+          border-radius: 7px;
+          border: 1px solid ${C.border};
+          background: rgba(255,255,255,.045);
           color: ${C.white};
-
-          font-size: 12px;
-
           outline: none;
-
-          box-sizing: border-box;
-        }
-
-        .login-panel .form-input {
-          margin-bottom: 8px;
-        }
-
-        .form-input:focus {
-          border-color:
-            rgba(200,245,37,.55);
-
-          box-shadow:
-            0 0 0 2px
-            rgba(200,245,37,.06);
+          font-size: 11px;
+          margin-bottom: 7px;
         }
 
         .login-error {
           color: ${C.red};
-
-          font-size: 10px;
-
-          margin-bottom: 8px;
+          font-size: 9px;
+          margin-bottom: 7px;
         }
 
         .login-buttons {
           display: flex;
-          gap: 7px;
+          gap: 6px;
         }
 
-        .primary-btn {
-          padding:
-            8px 15px;
-
-          border: none;
-
-          border-radius: 8px;
-
-          background:
-            ${C.lime};
-
-          color:
-            ${C.navy};
-
-          font-size: 11px;
-          font-weight: 800;
-
+        .sign-in-btn,
+        .cancel-btn {
+          border-radius: 7px;
+          padding: 7px 12px;
+          font-size: 10px;
+          font-weight: 700;
           cursor: pointer;
         }
 
-        .secondary-btn {
-          padding:
-            8px 13px;
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 8px;
-
-          background:
-            transparent;
-
-          color:
-            ${C.textMuted};
-
-          font-size: 11px;
-          font-weight: 650;
-
-          cursor: pointer;
+        .sign-in-btn {
+          background: ${C.lime};
+          color: ${C.navy};
+          border: none;
         }
 
-        .delete-btn {
-          padding:
-            8px 13px;
-
-          border: none;
-
-          border-radius: 8px;
-
-          background:
-            ${C.redDim};
-
-          color:
-            ${C.red};
-
-          font-size: 11px;
-          font-weight: 750;
-
-          cursor: pointer;
-        }
-
-        .disabled-btn {
-          padding:
-            8px 15px;
-
-          border: none;
-
-          border-radius: 8px;
-
-          background:
-            ${C.border};
-
-          color:
-            ${C.textDim};
-
-          font-size: 11px;
-          font-weight: 800;
+        .cancel-btn {
+          background: transparent;
+          color: ${C.textMuted};
+          border: 1px solid ${C.border};
         }
 
         /* =================================================
            MAIN
            ================================================= */
 
-        .main-content {
+        .main {
           width: 100%;
           max-width: 1180px;
-
+          height: calc(100dvh - 74px);
           margin: 0 auto;
-
-          padding:
-            20px 22px 24px;
-
-          flex: 1 1 auto;
-
-          min-height: 0;
-
+          padding: 15px 20px 14px;
+          overflow: hidden;
           display: flex;
           flex-direction: column;
-
-          overflow: hidden;
         }
 
         /* =================================================
            INTRO
            ================================================= */
 
-        .intro-section {
-          flex: 0 0 auto;
-
-          margin-bottom: 14px;
-
+        .intro {
+          flex-shrink: 0;
           display: flex;
-
-          align-items: flex-end;
+          align-items: center;
           justify-content: space-between;
-
-          gap: 12px;
+          gap: 10px;
+          margin-bottom: 10px;
         }
 
-        .section-label {
+        .intro-label {
           color: ${C.textMuted};
-
-          font-size: 9px;
-          font-weight: 650;
-
-          letter-spacing: .45px;
-
-          margin-bottom: 5px;
+          font-size: 8px;
+          font-weight: 700;
+          letter-spacing: .4px;
+          margin-bottom: 3px;
         }
 
-        .intro-section h2 {
+        .intro h2 {
           margin: 0;
-
-          font-size: 23px;
-          line-height: 1.1;
-
-          font-weight: 750;
-
-          letter-spacing: -.55px;
+          font-size: 20px;
+          line-height: 1.05;
+          font-weight: 800;
+          letter-spacing: -.4px;
         }
 
-        .intro-section h2 span {
+        .intro h2 span {
           color: ${C.lime};
         }
 
-        .admin-status {
+        .manage-status {
           color: ${C.green};
-
-          font-size: 10px;
-          font-weight: 650;
-
-          white-space: nowrap;
+          font-size: 9px;
+          font-weight: 700;
         }
 
         /* =================================================
@@ -2357,66 +2065,40 @@ export default function App() {
            ================================================= */
 
         .month-tabs {
-          flex: 0 0 auto;
-
-          background:
-            rgba(17,29,58,.75);
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 10px;
-
-          padding: 4px;
-
-          display: flex;
-
+          flex-shrink: 0;
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
           gap: 4px;
-
-          margin-bottom: 10px;
-
-          overflow-x: auto;
-
-          scrollbar-width: thin;
+          padding: 4px;
+          background: rgba(17,29,58,.75);
+          border: 1px solid ${C.border};
+          border-radius: 9px;
+          margin-bottom: 9px;
         }
 
-        .month-tab {
-          flex: 1 1 0;
-
-          min-width: 105px;
-
-          padding:
-            8px 12px;
-
-          border:
-            1px solid transparent;
-
-          border-radius: 7px;
-
+        .month-btn {
+          min-width: 0;
+          border: 1px solid transparent;
           background: transparent;
-
           color: ${C.textMuted};
-
+          padding: 7px 5px;
+          border-radius: 6px;
+          cursor: pointer;
           font-size: 10px;
           font-weight: 750;
-
-          cursor: pointer;
-
-          white-space: nowrap;
         }
 
-        .month-tab span {
-          opacity: .5;
-          font-weight: 500;
+        .month-btn small {
+          opacity: .45;
+          font-size: 8px;
+          margin-left: 3px;
         }
 
-        .month-tab.active {
-          border-color: ${C.lime};
-
-          background:
-            ${C.limeDim};
-
+        .month-btn.active {
           color: ${C.lime};
+          background: ${C.limeDim};
+          border-color: ${C.lime};
         }
 
         /* =================================================
@@ -2424,24 +2106,14 @@ export default function App() {
            ================================================= */
 
         .error-box {
-          flex: 0 0 auto;
-
-          background:
-            ${C.redDim};
-
-          border:
-            1px solid rgba(224,82,101,.25);
-
+          flex-shrink: 0;
+          background: ${C.redDim};
+          border: 1px solid rgba(224,82,101,.25);
           color: ${C.red};
-
-          padding:
-            8px 11px;
-
-          border-radius: 8px;
-
-          font-size: 10px;
-
-          margin-bottom: 8px;
+          padding: 7px 10px;
+          border-radius: 7px;
+          font-size: 9px;
+          margin-bottom: 7px;
         }
 
         /* =================================================
@@ -2449,271 +2121,188 @@ export default function App() {
            ================================================= */
 
         .calendar-card {
-          flex: 1 1 auto;
-
-          min-height: 0;
-
-          background:
-            rgba(17,29,58,.7);
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 13px;
-
+          flex-shrink: 0;
+          width: 100%;
+          background: rgba(17,29,58,.7);
+          border: 1px solid ${C.border};
+          border-radius: 11px;
           overflow: hidden;
-
-          box-shadow:
-            0 20px 60px rgba(0,0,0,.18);
-
-          display: flex;
-          flex-direction: column;
-        }
-
-        .calendar-titlebar {
-          flex: 0 0 auto;
-
-          padding:
-            10px 14px;
-
-          border-bottom:
-            1px solid ${C.border};
-
-          display: flex;
-
-          align-items: center;
-          justify-content: space-between;
-
-          gap: 10px;
+          box-shadow: 0 15px 40px rgba(0,0,0,.16);
         }
 
         .calendar-title {
-          font-size: 15px;
-          font-weight: 750;
+          height: 45px;
+          padding: 7px 12px;
+          border-bottom: 1px solid ${C.border};
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
         }
 
-        .calendar-subtitle {
-          margin-top: 2px;
+        .calendar-month {
+          font-size: 13px;
+          font-weight: 800;
+        }
 
+        .calendar-hint {
           color: ${C.textMuted};
-
-          font-size: 9px;
+          font-size: 8px;
+          margin-top: 2px;
         }
 
         .sync-status {
-          color: ${C.textMuted};
-
-          font-size: 9px;
-
-          white-space: nowrap;
+          color: ${C.green};
+          font-size: 8px;
+          font-weight: 700;
         }
 
-        .calendar-scroll {
-          flex: 1 1 auto;
-
-          min-height: 0;
-
-          overflow: auto;
-
-          scrollbar-width: thin;
-          scrollbar-color:
-            ${C.border}
-            transparent;
-        }
-
-        .calendar-grid {
-          min-width: 700px;
-
-          width: 100%;
-        }
-
-        .days-row,
-        .calendar-row {
+        .days-header {
           display: grid;
-
-          grid-template-columns:
-            repeat(7, minmax(0, 1fr));
-
+          grid-template-columns: repeat(7, minmax(0, 1fr));
           gap: 1px;
-
-          background:
-            ${C.border};
+          background: ${C.border};
         }
 
-        .day-header {
-          min-height: 28px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
+        .day-head {
+          min-width: 0;
           background: ${C.card};
-
+          text-align: center;
+          padding: 5px 2px;
           color: ${C.textMuted};
-
-          font-size: 9px;
-          font-weight: 750;
-
-          letter-spacing: .3px;
+          font-size: 8px;
+          font-weight: 800;
         }
 
-        .day-header.saturday {
+        .day-head.saturday {
           color: ${C.blue};
         }
 
-        .day-header.sunday {
+        .day-head.sunday {
           color: ${C.red};
         }
 
-        .calendar-row {
-          border-top:
-            1px solid ${C.border};
+        .day-short {
+          display: none;
         }
 
-        .calendar-row:first-of-type {
-          border-top: none;
+        .calendar-grid {
+          width: 100%;
+        }
+
+        .calendar-row {
+          display: grid;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 1px;
+          background: ${C.border};
         }
 
         .calendar-cell,
         .empty-cell {
-          min-height: 76px;
-
-          position: relative;
-
-          padding:
-            7px 7px 6px;
-
-          background:
-            ${C.card};
-
-          box-sizing: border-box;
+          min-width: 0;
+          height: 73px;
+          background: ${C.card};
         }
 
         .calendar-cell {
+          padding: 5px 5px 4px;
+          position: relative;
           cursor: pointer;
-
-          transition:
-            background .12s ease;
+          overflow: hidden;
+          transition: background .12s ease;
         }
 
         .calendar-cell:hover {
-          background:
-            ${C.cardHover};
+          background: ${C.cardHover};
         }
 
         .calendar-cell.selected {
-          background:
-            ${C.cardSelected};
-
-          outline:
-            2px solid ${C.lime};
-
-          outline-offset:
-            -2px;
-
-          z-index: 2;
+          background: ${C.cardSelected};
+          outline: 2px solid ${C.lime};
+          outline-offset: -2px;
         }
 
         .empty-cell {
-          background:
-            rgba(17,29,58,.35);
+          background: rgba(17,29,58,.38);
         }
 
         .date-top {
           display: flex;
-
           align-items: center;
           justify-content: space-between;
         }
 
         .date-number {
+          font-size: 11px;
+          font-weight: 700;
           color: ${C.white};
-
-          font-size: 12px;
-          font-weight: 600;
         }
 
-        .selected-date {
-          color: ${C.lime};
-
-          font-weight: 800;
-        }
-
-        .weekend-date {
+        .date-number.saturday {
           color: ${C.blue};
         }
 
-        .sunday-date {
+        .date-number.sunday {
           color: ${C.red};
+        }
+
+        .calendar-cell.selected .date-number {
+          color: ${C.lime};
+          font-weight: 900;
         }
 
         .event-dot {
           width: 5px;
           height: 5px;
-
-          flex: 0 0 5px;
-
           border-radius: 50%;
+          flex-shrink: 0;
         }
 
-        .event-card {
-          margin-top: 7px;
-
-          border:
-            1px solid transparent;
-
-          border-radius: 6px;
-
-          padding:
-            5px 6px;
+        .event-box {
+          margin-top: 6px;
+          border: 1px solid;
+          border-radius: 5px;
+          padding: 4px 5px;
+          overflow: hidden;
         }
 
         .event-type {
-          font-size: 7px;
-          font-weight: 800;
-
+          font-size: 6px;
+          line-height: 1;
+          font-weight: 900;
           text-transform: uppercase;
-
-          letter-spacing: .2px;
-
+          letter-spacing: .15px;
           margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .event-name {
           color: ${C.white};
-
           font-size: 8px;
-          line-height: 1.3;
-
+          line-height: 1.2;
           font-weight: 650;
-
           display: -webkit-box;
-
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
-
           overflow: hidden;
+          word-break: break-word;
         }
 
-        .empty-dash {
-          margin-top: 13px;
-
+        .no-event {
           color: ${C.textDim};
-
-          font-size: 8px;
-
+          font-size: 7px;
           opacity: .45;
+          margin-top: 16px;
         }
 
-        .event-bottom-bar {
+        .event-line {
           position: absolute;
-
-          left: 7px;
-          right: 7px;
-          bottom: 4px;
-
+          left: 5px;
+          right: 5px;
+          bottom: 3px;
           height: 2px;
-
           border-radius: 2px;
         }
 
@@ -2722,325 +2311,298 @@ export default function App() {
            ================================================= */
 
         .legend {
-          flex: 0 0 auto;
-
+          flex-shrink: 0;
           display: flex;
           align-items: center;
-
-          gap: 12px;
-
+          gap: 9px;
           flex-wrap: wrap;
-
-          margin-top: 7px;
-
-          padding:
-            0 3px;
-
-          color:
-            ${C.textMuted};
-
-          font-size: 8px;
+          margin: 6px 2px;
+          color: ${C.textMuted};
+          font-size: 7px;
         }
 
         .legend-item {
           display: flex;
           align-items: center;
-
-          gap: 4px;
-
+          gap: 3px;
           white-space: nowrap;
         }
 
-        .legend-line {
-          width: 11px;
+        .legend-item i {
+          width: 9px;
           height: 2px;
-
           border-radius: 2px;
         }
 
         /* =================================================
-           DETAIL PANEL
+           DETAIL
            ================================================= */
 
         .detail-panel {
-          flex: 0 0 auto;
-
-          margin-top: 10px;
-
-          background:
-            ${C.card};
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 11px;
-
-          padding:
-            14px 16px;
-
-          max-height: 260px;
-
-          overflow: auto;
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+          background: ${C.card};
+          border: 1px solid ${C.border};
+          border-radius: 10px;
+          padding: 12px 14px;
         }
 
         .detail-title {
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 800;
         }
 
-        .detail-date,
-        .form-label {
-          color: ${C.lime};
-
+        .detail-muted {
+          margin: 4px 0 0;
+          color: ${C.textMuted};
           font-size: 9px;
-          font-weight: 750;
+          line-height: 1.45;
         }
 
-        .detail-description {
-          margin:
-            5px 0 0;
-
-          color:
-            ${C.textMuted};
-
-          font-size: 10px;
-          line-height: 1.5;
+        .detail-date {
+          color: ${C.lime};
+          font-size: 9px;
+          font-weight: 800;
         }
 
         .detail-header {
           display: flex;
-
           align-items: flex-start;
           justify-content: space-between;
-
           gap: 10px;
         }
 
         .detail-header h3 {
-          margin:
-            3px 0 0;
-
-          font-size: 16px;
-          font-weight: 750;
+          margin: 3px 0 0;
+          font-size: 15px;
+          font-weight: 800;
         }
 
         .detail-actions {
           display: flex;
+          gap: 5px;
+        }
 
-          gap: 6px;
+        .edit-btn,
+        .delete-btn {
+          border-radius: 6px;
+          padding: 5px 9px;
+          font-size: 8px;
+          font-weight: 750;
+          cursor: pointer;
+        }
 
-          flex-wrap: wrap;
+        .edit-btn {
+          background: transparent;
+          color: ${C.white};
+          border: 1px solid ${C.border};
+        }
+
+        .delete-btn {
+          background: ${C.redDim};
+          color: ${C.red};
+          border: none;
         }
 
         .tags {
           display: flex;
-
-          gap: 5px;
-
+          gap: 4px;
           flex-wrap: wrap;
-
-          margin-top: 8px;
+          margin-top: 7px;
         }
 
         .tag {
-          padding:
-            3px 8px;
-
+          padding: 3px 7px;
           border-radius: 20px;
-
-          font-size: 8px;
-          font-weight: 700;
+          font-size: 7px;
+          font-weight: 750;
         }
 
-        .tag.neutral {
-          background:
-            rgba(255,255,255,.05);
-
-          color:
-            ${C.textMuted};
+        .muted-tag {
+          background: rgba(255,255,255,.05);
+          color: ${C.textMuted};
         }
 
-        .tag.office {
-          background:
-            ${C.greenDim};
-
-          color:
-            ${C.green};
+        .office-tag {
+          background: ${C.greenDim};
+          color: ${C.green};
         }
 
-        .tag.official {
-          background:
-            ${C.limeDim};
-
-          color:
-            ${C.lime};
+        .official-tag {
+          background: ${C.limeDim};
+          color: ${C.lime};
         }
 
-        .event-description {
-          margin:
-            9px 0 0;
-
-          color:
-            ${C.textMuted};
-
-          font-size: 10px;
-
-          line-height: 1.55;
-
+        .description {
+          margin: 7px 0 0;
+          color: ${C.textMuted};
+          font-size: 9px;
+          line-height: 1.5;
           max-width: 800px;
         }
 
         .admin-tools {
-          margin-top: 10px;
-
-          padding-top: 9px;
-
-          border-top:
-            1px solid ${C.border};
+          margin-top: 8px;
+          padding-top: 7px;
+          border-top: 1px solid ${C.border};
         }
 
-        .admin-tools-title {
-          color:
-            ${C.textDim};
-
-          font-size: 8px;
-
-          font-weight: 750;
-
+        .tools-title {
+          color: ${C.textDim};
+          font-size: 7px;
+          font-weight: 800;
           text-transform: uppercase;
-
           letter-spacing: .5px;
-
-          margin-bottom: 6px;
+          margin-bottom: 5px;
         }
 
-        .move-controls {
+        .move-row {
           display: flex;
-
           align-items: center;
-
-          gap: 6px;
-
+          gap: 5px;
           flex-wrap: wrap;
-        }
-
-        .move-label {
-          color:
-            ${C.textMuted};
-
-          font-size: 9px;
+          color: ${C.textMuted};
+          font-size: 8px;
         }
 
         .move-month,
         .move-day {
-          height: 29px;
-
-          background:
-            rgba(255,255,255,.045);
-
-          border:
-            1px solid ${C.border};
-
-          border-radius: 7px;
-
-          color:
-            ${C.white};
-
-          padding:
-            0 8px;
-
-          font-size: 9px;
-
+          border: 1px solid ${C.border};
+          background: rgba(255,255,255,.045);
+          color: ${C.white};
+          border-radius: 6px;
+          padding: 5px 7px;
           outline: none;
+          font-size: 8px;
         }
 
         .move-month {
-          width: 120px;
+          width: 105px;
         }
 
         .move-day {
-          width: 62px;
+          width: 50px;
         }
 
-        /* =================================================
-           EVENT FORM
-           ================================================= */
-
-        .form-header {
-          margin-bottom: 10px;
-        }
-
-        .form-date {
-          margin-top: 3px;
-
-          font-size: 14px;
-
+        .move-btn {
+          border: 1px solid ${C.border};
+          background: transparent;
+          color: ${C.white};
+          border-radius: 6px;
+          padding: 5px 9px;
+          font-size: 8px;
           font-weight: 750;
-        }
-
-        .event-form {
-          max-width: 720px;
-
-          display: grid;
-
-          grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-          gap: 8px;
-        }
-
-        .event-form .full {
-          grid-column:
-            1 / -1;
-        }
-
-        .textarea {
-          resize: vertical;
-          min-height: 75px;
-        }
-
-        .office-checkbox {
-          display: flex;
-
-          align-items: center;
-
-          gap: 7px;
-
-          color:
-            ${C.textMuted};
-
-          font-size: 10px;
-
           cursor: pointer;
         }
 
-        .office-checkbox input {
-          accent-color:
-            ${C.lime};
-        }
-
-        .form-actions {
-          display: flex;
-
-          justify-content: flex-end;
-
-          align-items: center;
-
-          gap: 6px;
-
-          flex-wrap: wrap;
-        }
-
-        .no-event-title {
+        .empty-title {
           margin-top: 3px;
-
-          font-size: 14px;
-
-          font-weight: 700;
+          font-size: 13px;
+          font-weight: 800;
         }
 
         .add-event-btn {
-          margin-top: 9px;
+          margin-top: 7px;
+          padding: 6px 11px;
+          background: ${C.lime};
+          color: ${C.navy};
+          border: none;
+          border-radius: 6px;
+          font-size: 9px;
+          font-weight: 850;
+          cursor: pointer;
+        }
+
+        /* =================================================
+           FORM
+           ================================================= */
+
+        .form-heading {
+          margin-bottom: 7px;
+        }
+
+        .form-label {
+          color: ${C.lime};
+          font-size: 8px;
+          font-weight: 800;
+        }
+
+        .form-date {
+          margin-top: 2px;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .form-grid {
+          max-width: 700px;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .form-input {
+          width: 100%;
+          min-width: 0;
+          border: 1px solid ${C.border};
+          background: rgba(255,255,255,.045);
+          color: ${C.white};
+          border-radius: 6px;
+          padding: 7px 8px;
+          font-size: 9px;
+          outline: none;
+        }
+
+        .form-input.full {
+          grid-column: 1 / -1;
+        }
+
+        .textarea {
+          resize: none;
+        }
+
+        .office-check {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          color: ${C.textMuted};
+          font-size: 8px;
+        }
+
+        .form-buttons {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .cancel-form-btn,
+        .delete-form-btn,
+        .save-form-btn {
+          border-radius: 6px;
+          padding: 6px 9px;
+          font-size: 8px;
+          font-weight: 750;
+          cursor: pointer;
+        }
+
+        .cancel-form-btn {
+          border: 1px solid ${C.border};
+          background: transparent;
+          color: ${C.textMuted};
+        }
+
+        .delete-form-btn {
+          border: none;
+          background: ${C.redDim};
+          color: ${C.red};
+        }
+
+        .save-form-btn {
+          border: none;
+          background: ${C.lime};
+          color: ${C.navy};
+          font-weight: 850;
         }
 
         /* =================================================
@@ -3048,61 +2610,64 @@ export default function App() {
            ================================================= */
 
         .footer-note {
-          flex: 0 0 auto;
-
-          margin-top: 8px;
-
-          padding:
-            0 3px;
-
-          color:
-            ${C.textDim};
-
-          font-size: 8px;
-
-          line-height: 1.5;
+          flex-shrink: 0;
+          margin-top: 5px;
+          color: ${C.textDim};
+          font-size: 7px;
+          line-height: 1.3;
         }
 
         .footer-note strong {
-          color:
-            ${C.textMuted};
+          color: ${C.textMuted};
         }
 
         /* =================================================
            TABLET
            ================================================= */
 
-        @media (max-width: 850px) {
+        @media (max-width: 800px) {
 
-          .main-content {
-            padding-left: 14px;
-            padding-right: 14px;
+          .header {
+            height: 68px;
           }
 
-          .header-inner {
-            padding-left: 14px;
-            padding-right: 14px;
-          }
-
-          .brand h1 {
-            font-size: 19px;
+          .main {
+            height: calc(100dvh - 68px);
+            padding: 10px 12px;
           }
 
           .brand p {
-            max-width: 400px;
+            display: none;
           }
 
-          .calendar-grid {
-            min-width: 650px;
+          .brand h1 {
+            font-size: 17px;
+          }
+
+          .logo {
+            width: 38px;
+            height: 38px;
+          }
+
+          .intro h2 {
+            font-size: 18px;
           }
 
           .calendar-cell,
           .empty-cell {
-            min-height: 70px;
+            height: 68px;
+          }
+
+          .event-name {
+            font-size: 7px;
+          }
+
+          .event-type {
+            font-size: 5.5px;
           }
 
           .detail-panel {
-            max-height: 245px;
+            padding: 10px 12px;
           }
         }
 
@@ -3110,310 +2675,359 @@ export default function App() {
            MOBILE
            ================================================= */
 
-        @media (max-width: 650px) {
+        @media (max-width: 560px) {
 
           html,
           body,
           #root {
-            height: 100%;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
           }
 
-          .app-shell {
+          .app {
+            width: 100%;
+            max-width: 100%;
             height: 100dvh;
+            overflow: hidden;
           }
 
-          .top-header {
-            z-index: 100;
+          .header {
+            height: 61px;
           }
 
           .header-inner {
-            padding:
-              10px 10px;
-
-            align-items: flex-start;
-
-            gap: 8px;
+            padding: 7px 9px;
+            gap: 6px;
           }
 
           .brand {
-            gap: 9px;
-
+            gap: 7px;
             min-width: 0;
-
-            flex: 1 1 auto;
           }
 
-          .brand-logo {
-            width: 39px;
-            height: 39px;
-            flex-basis: 39px;
-
-            border-radius: 9px;
+          .logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
           }
 
-          .brand-logo svg {
-            width: 31px;
-            height: 31px;
-          }
-
-          .eyebrow {
-            font-size: 7px;
-            letter-spacing: 1px;
-
-            margin-bottom: 2px;
+          .brand-small {
+            font-size: 6px;
+            letter-spacing: .8px;
           }
 
           .brand h1 {
-            font-size: 16px;
-
-            letter-spacing: -.3px;
+            font-size: 14px;
+            letter-spacing: -.2px;
           }
 
           .brand p {
             display: none;
           }
 
-          .admin-area {
-            flex: 0 0 auto;
-          }
-
           .admin-btn {
-            padding:
-              7px 10px;
-
-            font-size: 9px;
-          }
-
-          .admin-actions {
-            gap: 5px;
+            padding: 6px 8px !important;
+            font-size: 8px !important;
           }
 
           .admin-badge {
-            padding:
-              6px 7px;
-
-            font-size: 8px;
+            padding: 5px 7px;
+            font-size: 7px;
           }
 
           .logout-btn {
-            padding:
-              6px 8px;
-
-            font-size: 8px;
+            padding: 5px 7px !important;
+            font-size: 7px !important;
           }
 
           .login-panel {
             position: fixed;
-
-            top: 58px;
-
-            right: 8px;
+            top: 57px;
             left: 8px;
-
+            right: 8px;
             width: auto;
-
             max-width: none;
-
-            padding: 14px;
-
-            z-index: 200;
-          }
-
-          .main-content {
-            padding:
-              12px 8px 10px;
-
-            min-height: 0;
-          }
-
-          .intro-section {
-            margin-bottom: 9px;
-
-            align-items: center;
-          }
-
-          .section-label {
-            font-size: 7px;
-
-            margin-bottom: 3px;
-          }
-
-          .intro-section h2 {
-            font-size: 17px;
-          }
-
-          .admin-status {
-            font-size: 8px;
-          }
-
-          .month-tabs {
-            margin-bottom: 7px;
-
-            padding: 3px;
-
-            border-radius: 8px;
-          }
-
-          .month-tab {
-            min-width: 90px;
-
-            padding:
-              7px 9px;
-
-            font-size: 9px;
-          }
-
-          .error-box {
-            font-size: 9px;
-
-            padding:
-              7px 9px;
-
-            margin-bottom: 6px;
-          }
-
-          .calendar-card {
+            padding: 12px;
             border-radius: 10px;
           }
 
-          .calendar-titlebar {
-            padding:
-              8px 10px;
+          .login-title {
+            font-size: 12px;
+          }
+
+          .login-input {
+            padding: 8px;
+            font-size: 10px;
+          }
+
+          .main {
+            width: 100%;
+            max-width: 100%;
+            height: calc(100dvh - 61px);
+            padding: 7px 7px 8px;
+            overflow: hidden;
+          }
+
+          .intro {
+            margin-bottom: 6px;
+          }
+
+          .intro-label {
+            font-size: 6px;
+            margin-bottom: 2px;
+          }
+
+          .intro h2 {
+            font-size: 14px;
+          }
+
+          .manage-status {
+            font-size: 7px;
+          }
+
+          .month-tabs {
+            gap: 2px;
+            padding: 3px;
+            margin-bottom: 6px;
+          }
+
+          .month-btn {
+            padding: 6px 2px;
+            font-size: 8px;
+          }
+
+          .month-btn small {
+            display: none;
+          }
+
+          .calendar-card {
+            border-radius: 8px;
           }
 
           .calendar-title {
-            font-size: 13px;
+            height: 38px;
+            padding: 5px 8px;
           }
 
-          .calendar-subtitle {
-            font-size: 8px;
+          .calendar-month {
+            font-size: 11px;
+          }
+
+          .calendar-hint {
+            font-size: 6px;
           }
 
           .sync-status {
-            font-size: 8px;
+            font-size: 6px;
           }
 
-          .calendar-grid {
-            min-width: 560px;
+          .day-head {
+            padding: 4px 1px;
+            font-size: 7px;
           }
 
-          .day-header {
-            min-height: 25px;
+          .day-full {
+            display: none;
+          }
 
-            font-size: 8px;
+          .day-short {
+            display: inline;
           }
 
           .calendar-cell,
           .empty-cell {
-            min-height: 64px;
+            height: 57px;
+          }
 
-            padding:
-              6px 5px;
+          .calendar-cell {
+            padding: 4px 3px 3px;
           }
 
           .date-number {
-            font-size: 10px;
+            font-size: 9px;
           }
 
           .event-dot {
             width: 4px;
             height: 4px;
-            flex-basis: 4px;
           }
 
-          .event-card {
-            margin-top: 5px;
-
-            padding:
-              4px 4px;
-
-            border-radius: 5px;
+          .event-box {
+            margin-top: 4px;
+            padding: 3px 3px;
+            border-radius: 4px;
           }
 
           .event-type {
-            font-size: 6px;
+            font-size: 4.5px;
+            margin-bottom: 1px;
           }
 
           .event-name {
-            font-size: 7px;
+            font-size: 6px;
+            line-height: 1.15;
           }
 
-          .event-bottom-bar {
-            left: 5px;
-            right: 5px;
-            bottom: 3px;
+          .no-event {
+            font-size: 6px;
+            margin-top: 11px;
+          }
+
+          .event-line {
+            left: 3px;
+            right: 3px;
+            bottom: 2px;
+            height: 1.5px;
           }
 
           .legend {
-            gap: 8px;
-
-            margin-top: 6px;
-
-            font-size: 7px;
+            gap: 6px;
+            margin: 4px 1px;
+            font-size: 6px;
           }
 
-          .legend-line {
-            width: 9px;
+          .legend-item {
+            gap: 2px;
+          }
+
+          .legend-item i {
+            width: 7px;
           }
 
           .detail-panel {
-            margin-top: 7px;
+            padding: 8px 9px;
+            border-radius: 8px;
+          }
 
-            padding:
-              11px 11px;
+          .detail-title {
+            font-size: 10px;
+          }
 
-            border-radius: 9px;
+          .detail-muted {
+            font-size: 7px;
+            line-height: 1.35;
+          }
 
-            max-height: 210px;
+          .detail-date {
+            font-size: 7px;
           }
 
           .detail-header h3 {
-            font-size: 14px;
+            font-size: 12px;
           }
 
-          .detail-date,
-          .form-label {
-            font-size: 8px;
+          .detail-actions {
+            gap: 3px;
           }
 
-          .detail-description,
-          .event-description {
-            font-size: 9px;
+          .edit-btn,
+          .delete-btn {
+            padding: 4px 7px;
+            font-size: 7px;
           }
 
-          .event-form {
-            grid-template-columns:
-              1fr;
-
-            gap: 7px;
+          .tags {
+            margin-top: 5px;
+            gap: 3px;
           }
 
-          .event-form .full {
-            grid-column:
-              auto;
+          .tag {
+            padding: 2px 5px;
+            font-size: 6px;
           }
 
-          .form-actions {
-            justify-content:
-              flex-start;
+          .description {
+            margin-top: 5px;
+            font-size: 7px;
+            line-height: 1.35;
+            max-height: 31px;
+            overflow: hidden;
           }
 
-          .move-controls {
-            align-items:
-              stretch;
+          .admin-tools {
+            margin-top: 5px;
+            padding-top: 5px;
           }
 
-          .move-label {
-            width: 100%;
+          .tools-title {
+            font-size: 6px;
+            margin-bottom: 3px;
+          }
+
+          .move-row {
+            gap: 3px;
+            font-size: 7px;
+          }
+
+          .move-month,
+          .move-day,
+          .move-btn {
+            padding: 4px 5px;
+            font-size: 7px;
           }
 
           .move-month {
-            flex: 1 1 140px;
-            width: auto;
+            width: 83px;
           }
 
           .move-day {
-            flex: 0 0 65px;
+            width: 43px;
+          }
+
+          .move-btn {
+            padding-left: 7px;
+            padding-right: 7px;
+          }
+
+          .empty-title {
+            font-size: 11px;
+          }
+
+          .add-event-btn {
+            margin-top: 5px;
+            padding: 5px 8px;
+            font-size: 7px;
+          }
+
+          .form-heading {
+            margin-bottom: 5px;
+          }
+
+          .form-label {
+            font-size: 6px;
+          }
+
+          .form-date {
+            font-size: 11px;
+          }
+
+          .form-grid {
+            gap: 4px;
+          }
+
+          .form-input {
+            padding: 6px;
+            font-size: 7px;
+          }
+
+          .textarea {
+            height: 40px;
+          }
+
+          .office-check {
+            font-size: 7px;
+          }
+
+          .form-buttons {
+            gap: 3px;
+          }
+
+          .cancel-form-btn,
+          .delete-form-btn,
+          .save-form-btn {
+            padding: 5px 7px;
+            font-size: 7px;
           }
 
           .footer-note {
@@ -3422,61 +3036,48 @@ export default function App() {
         }
 
         /* =================================================
-           SMALL MOBILE
+           VERY SMALL MOBILE
            ================================================= */
 
-        @media (max-width: 420px) {
+        @media (max-width: 380px) {
 
           .brand h1 {
-            font-size: 14px;
+            font-size: 12px;
           }
 
-          .admin-badge {
-            display: none;
+          .logo {
+            width: 30px;
+            height: 30px;
           }
 
           .admin-btn {
-            font-size: 8px;
-
-            padding:
-              7px 8px;
+            font-size: 7px !important;
+            padding: 5px 6px !important;
           }
 
-          .logout-btn {
-            font-size: 8px;
-          }
-
-          .intro-section h2 {
-            font-size: 15px;
-          }
-
-          .admin-status {
-            display: none;
-          }
-
-          .calendar-grid {
-            min-width: 520px;
+          .intro h2 {
+            font-size: 12px;
           }
 
           .calendar-cell,
           .empty-cell {
-            min-height: 60px;
+            height: 52px;
           }
 
           .event-name {
-            -webkit-line-clamp: 1;
+            font-size: 5.5px;
           }
 
-          .detail-actions {
-            width: 100%;
+          .event-type {
+            font-size: 4px;
           }
 
-          .detail-actions button {
-            flex: 1;
+          .date-number {
+            font-size: 8px;
           }
 
-          .form-actions button {
-            flex: 1;
+          .detail-panel {
+            padding: 7px;
           }
         }
 
@@ -3484,3 +3085,4 @@ export default function App() {
     </div>
   );
 }
+```
