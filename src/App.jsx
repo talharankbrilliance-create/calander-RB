@@ -1,63 +1,45 @@
-
-```jsx
 import React, { useState, useEffect, useCallback } from "react";
+import {
+  Client,
+  Databases,
+  Account,
+  ID,
+  Query,
+  Permission,
+  Role,
+} from "appwrite";
 
 /* =========================================================
-   RB OFFICE CALENDAR — SEPTEMBER TO DECEMBER 2026
-   COMPACT + FULL SCREEN + MOBILE RESPONSIVE
+   RB OFFICE CALENDAR — APPWRITE VERSION
+   SEPTEMBER TO DECEMBER 2026
    ========================================================= */
 
-// ─────────────────────────────────────────────
-// SUPABASE
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   APPWRITE
+   ───────────────────────────────────────────── */
 
-const SB_URL = "https://sareoammotgevuolryqb.supabase.co";
-const SB_KEY = "sb_publishable_UYJ8AC4BEXPmrHShs-rnSA_qKH6IknC";
+const APPWRITE_ENDPOINT = "https://fra.cloud.appwrite.io/v1";
+const APPWRITE_PROJECT_ID = "fra-6a9698ce00010509b898";
+const DATABASE_ID = "database-6a969bf50001918a6620";
+const TABLE_ID = "events";
 
-function sbHeaders(token) {
-  return {
-    apikey: SB_KEY,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-    Authorization: `Bearer ${token || SB_KEY}`,
-  };
-}
+const client = new Client()
+  .setEndpoint(APPWRITE_ENDPOINT)
+  .setProject(APPWRITE_PROJECT_ID);
 
-async function sbFetch(path, opts = {}, token) {
-  const res = await fetch(`${SB_URL}${path}`, {
-    ...opts,
-    headers: {
-      ...sbHeaders(token),
-      ...(opts.headers || {}),
-    },
-  });
+const databases = new Databases(client);
+const account = new Account(client);
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Supabase ${res.status}: ${text}`);
-  }
-
-  const contentType = res.headers.get("content-type") || "";
-
-  if (contentType.includes("json")) {
-    return res.json();
-  }
-
-  return null;
-}
-
-// ─────────────────────────────────────────────
-// DESIGN
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   DESIGN
+   ───────────────────────────────────────────── */
 
 const C = {
   navy: "#081126",
   navy2: "#0b1530",
-
   card: "#111d3a",
   cardHover: "#162347",
   cardSelected: "#1b315d",
-
   border: "#203257",
 
   lime: "#c8f525",
@@ -102,9 +84,9 @@ const DAYS_HEADER = [
   "Sun",
 ];
 
-// ─────────────────────────────────────────────
-// OFFICIAL PAKISTAN EVENTS
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   OFFICIAL EVENTS
+   ───────────────────────────────────────────── */
 
 const OFFICIAL_EVENTS = {
   "2026-09-06": {
@@ -113,7 +95,7 @@ const OFFICIAL_EVENTS = {
     type: "National Day",
     holiday: "National Day",
     description:
-      "Commemorates the defence of Pakistan during the 1965 India–Pakistan war. Observed annually on September 6 with tributes and national ceremonies.",
+      "Commemorates the defence of Pakistan during the 1965 India–Pakistan war.",
     official: true,
     color: C.lime,
   },
@@ -124,7 +106,7 @@ const OFFICIAL_EVENTS = {
     type: "National Event",
     holiday: "National Observance",
     description:
-      "Pakistan Air Force Day is observed on September 7 in remembrance of the role of the Pakistan Air Force during the 1965 war.",
+      "Pakistan Air Force Day is observed on September 7.",
     official: true,
     color: C.lime,
   },
@@ -133,9 +115,9 @@ const OFFICIAL_EVENTS = {
     id: "official-iqbal-day",
     name: "Iqbal Day",
     type: "National Day",
-    holiday: "Public Holiday / National Day",
+    holiday: "Public Holiday",
     description:
-      "Iqbal Day commemorates the birth anniversary of Allama Muhammad Iqbal on November 9.",
+      "Iqbal Day commemorates the birth anniversary of Allama Muhammad Iqbal.",
     official: true,
     color: C.lime,
   },
@@ -146,15 +128,15 @@ const OFFICIAL_EVENTS = {
     type: "National Day",
     holiday: "Public Holiday",
     description:
-      "Commemorates the birth anniversary of Quaid-e-Azam Muhammad Ali Jinnah on December 25.",
+      "Commemorates the birth anniversary of Quaid-e-Azam Muhammad Ali Jinnah.",
     official: true,
     color: C.lime,
   },
 };
 
-// ─────────────────────────────────────────────
-// EVENT TYPES
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   EVENT TYPES
+   ───────────────────────────────────────────── */
 
 const EVENT_TYPES = [
   {
@@ -204,9 +186,9 @@ function getTypeStyle(type, isOfficial = false) {
   );
 }
 
-// ─────────────────────────────────────────────
-// DATE HELPERS
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   DATE HELPERS
+   ───────────────────────────────────────────── */
 
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -267,13 +249,13 @@ function formatDateForDisplay(month, day) {
   return `${day} ${monthName} ${YEAR}`;
 }
 
-// ─────────────────────────────────────────────
-// SUPABASE ROW
-// ─────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   APPWRITE ROW → EVENT
+   ───────────────────────────────────────────── */
 
 function rowToEvent(row) {
   return {
-    id: row.id,
+    id: row.$id,
     date: row.event_date,
     name: row.event_name,
     type: row.event_type || "Custom Event",
@@ -289,32 +271,9 @@ function rowToEvent(row) {
   };
 }
 
-// ─────────────────────────────────────────────
-// INPUT STYLE
-// ─────────────────────────────────────────────
-
-const inputStyle = {
-  background: "rgba(255,255,255,0.045)",
-  border: `1px solid ${C.border}`,
-  borderRadius: 8,
-  padding: "9px 11px",
-  color: C.white,
-  fontSize: 12,
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-};
-
-const buttonBase = {
-  borderRadius: 8,
-  fontFamily: "inherit",
-  cursor: "pointer",
-};
-
-// =========================================================
-// APP
-// =========================================================
+/* =========================================================
+   APP
+   ========================================================= */
 
 export default function App() {
   const [activeMonth, setActiveMonth] = useState(9);
@@ -324,10 +283,6 @@ export default function App() {
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-
-  // ─────────────────────────────────────────────
-  // FORM
-  // ─────────────────────────────────────────────
 
   const emptyForm = {
     name: "",
@@ -339,9 +294,9 @@ export default function App() {
 
   const [form, setForm] = useState(emptyForm);
 
-  // ─────────────────────────────────────────────
-  // AUTH
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     AUTH
+     ───────────────────────────────────────────── */
 
   const [session, setSession] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -354,33 +309,70 @@ export default function App() {
   const [loginError, setLoginError] = useState(null);
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const isAdmin = Boolean(session?.access_token);
+  const isAdmin = Boolean(session);
 
-  // ─────────────────────────────────────────────
-  // CURRENT MONTH
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     CURRENT MONTH
+     ───────────────────────────────────────────── */
 
   const currentMonth =
     MONTHS.find((item) => item.month === activeMonth) ||
     MONTHS[0];
 
-  // ─────────────────────────────────────────────
-  // FETCH EVENTS
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     CHECK APPWRITE SESSION
+     ───────────────────────────────────────────── */
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkSession() {
+      try {
+        const user = await account.get();
+
+        if (mounted && user) {
+          setSession(user);
+        }
+      } catch {
+        if (mounted) {
+          setSession(null);
+        }
+      }
+    }
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* ─────────────────────────────────────────────
+     FETCH EVENTS
+     ───────────────────────────────────────────── */
 
   const fetchEvents = useCallback(async () => {
     try {
-      const rows = await sbFetch(
-        `/rest/v1/events?select=*&event_date=gte.${YEAR}-09-01&event_date=lte.${YEAR}-12-31&order=event_date.asc`,
-        {
-          method: "GET",
-        },
-        session?.access_token
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        TABLE_ID,
+        [
+          Query.greaterThanEqual(
+            "event_date",
+            `${YEAR}-09-01`
+          ),
+          Query.lessThanEqual(
+            "event_date",
+            `${YEAR}-12-31`
+          ),
+          Query.orderAsc("event_date"),
+          Query.limit(500),
+        ]
       );
 
       const map = {};
 
-      (rows || []).forEach((row) => {
+      (response.documents || []).forEach((row) => {
         if (row.event_date) {
           map[row.event_date] = rowToEvent(row);
         }
@@ -390,19 +382,22 @@ export default function App() {
       setError(null);
     } catch (e) {
       console.error("Fetch events failed:", e);
-      setError("Could not load events from database.");
+
+      setError(
+        "Could not load events from Appwrite. Check your table permissions."
+      );
     }
 
     setLoaded(true);
-  }, [session]);
+  }, []);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // ─────────────────────────────────────────────
-  // GET EVENT
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     GET EVENT
+     ───────────────────────────────────────────── */
 
   const getEvent = (month, day) => {
     const key = dateKey(YEAR, month, day);
@@ -414,9 +409,9 @@ export default function App() {
     );
   };
 
-  // ─────────────────────────────────────────────
-  // SELECT DATE
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     SELECT DATE
+     ───────────────────────────────────────────── */
 
   const selectDate = (day) => {
     setSelected({
@@ -427,9 +422,9 @@ export default function App() {
     setEditing(null);
   };
 
-  // ─────────────────────────────────────────────
-  // MONTH CHANGE
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     MONTH
+     ───────────────────────────────────────────── */
 
   const changeMonth = (month) => {
     setActiveMonth(month);
@@ -438,13 +433,15 @@ export default function App() {
     setError(null);
   };
 
-  // ─────────────────────────────────────────────
-  // LOGIN
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     LOGIN
+     ───────────────────────────────────────────── */
 
   const handleLogin = async () => {
     if (!loginForm.email || !loginForm.password) {
-      setLoginError("Please enter email and password.");
+      setLoginError(
+        "Please enter email and password."
+      );
       return;
     }
 
@@ -452,59 +449,51 @@ export default function App() {
     setLoginError(null);
 
     try {
-      const data = await sbFetch(
-        "/auth/v1/token?grant_type=password",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: loginForm.email,
-            password: loginForm.password,
-          }),
-        }
+      const user = await account.createEmailPasswordSession(
+        loginForm.email.trim(),
+        loginForm.password
       );
 
-      if (data?.access_token) {
-        setSession({
-          access_token: data.access_token,
-          user: data.user,
-        });
+      setSession(user);
+      setShowLogin(false);
 
-        setShowLogin(false);
+      setLoginForm({
+        email: "",
+        password: "",
+      });
 
-        setLoginForm({
-          email: "",
-          password: "",
-        });
-      } else {
-        setLoginError(
-          "Login failed. Check your credentials."
-        );
-      }
+      setError(null);
     } catch (e) {
       console.error("Login failed:", e);
 
       setLoginError(
-        "Login failed. Check your credentials."
+        "Login failed. Check your email and password."
       );
     }
 
     setLoginLoading(false);
   };
 
-  // ─────────────────────────────────────────────
-  // LOGOUT
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     LOGOUT
+     ───────────────────────────────────────────── */
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession("current");
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
+
     setSession(null);
     setEditing(null);
     setSelected(null);
     setShowLogin(false);
   };
 
-  // ─────────────────────────────────────────────
-  // OPEN ADD
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     OPEN ADD
+     ───────────────────────────────────────────── */
 
   const openAdd = () => {
     if (!isAdmin || !selected) return;
@@ -530,9 +519,9 @@ export default function App() {
     setError(null);
   };
 
-  // ─────────────────────────────────────────────
-  // OPEN EDIT
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     OPEN EDIT
+     ───────────────────────────────────────────── */
 
   const openEdit = (event) => {
     if (!isAdmin || !event || event.official) {
@@ -553,9 +542,9 @@ export default function App() {
     setError(null);
   };
 
-  // ─────────────────────────────────────────────
-  // SAVE
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     SAVE EVENT
+     ───────────────────────────────────────────── */
 
   const saveEvent = async () => {
     if (
@@ -593,7 +582,7 @@ export default function App() {
           form.description.trim(),
 
         is_office_event:
-          form.isOffice,
+          Boolean(form.isOffice),
       };
 
       const existing = dbEvents[key];
@@ -602,22 +591,23 @@ export default function App() {
         editing === "edit" &&
         existing
       ) {
-        await sbFetch(
-          `/rest/v1/events?id=eq.${existing.id}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify(body),
-          },
-          session.access_token
+        await databases.updateDocument(
+          DATABASE_ID,
+          TABLE_ID,
+          existing.id,
+          body
         );
       } else {
-        await sbFetch(
-          "/rest/v1/events",
-          {
-            method: "POST",
-            body: JSON.stringify(body),
-          },
-          session.access_token
+        await databases.createDocument(
+          DATABASE_ID,
+          TABLE_ID,
+          ID.unique(),
+          body,
+          [
+            Permission.read(Role.any()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+          ]
         );
       }
 
@@ -628,16 +618,18 @@ export default function App() {
       console.error("Save failed:", e);
 
       setError(
-        `Save failed: ${e.message}`
+        `Save failed: ${
+          e.message || "Appwrite error"
+        }`
       );
     }
 
     setSaving(false);
   };
 
-  // ─────────────────────────────────────────────
-  // DELETE
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     DELETE EVENT
+     ───────────────────────────────────────────── */
 
   const deleteEvent = async () => {
     if (!selected || !isAdmin) return;
@@ -662,12 +654,10 @@ export default function App() {
     setError(null);
 
     try {
-      await sbFetch(
-        `/rest/v1/events?id=eq.${event.id}`,
-        {
-          method: "DELETE",
-        },
-        session.access_token
+      await databases.deleteDocument(
+        DATABASE_ID,
+        TABLE_ID,
+        event.id
       );
 
       setEditing(null);
@@ -677,16 +667,18 @@ export default function App() {
       console.error("Delete failed:", e);
 
       setError(
-        `Delete failed: ${e.message}`
+        `Delete failed: ${
+          e.message || "Appwrite error"
+        }`
       );
     }
 
     setSaving(false);
   };
 
-  // ─────────────────────────────────────────────
-  // MOVE EVENT
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     MOVE EVENT
+     ───────────────────────────────────────────── */
 
   const moveEvent = async (
     newMonth,
@@ -726,6 +718,7 @@ export default function App() {
       dayNumber < 1 ||
       dayNumber > maxDays
     ) {
+      setError("Please enter a valid day.");
       return;
     }
 
@@ -749,15 +742,13 @@ export default function App() {
     setError(null);
 
     try {
-      await sbFetch(
-        `/rest/v1/events?id=eq.${event.id}`,
+      await databases.updateDocument(
+        DATABASE_ID,
+        TABLE_ID,
+        event.id,
         {
-          method: "PATCH",
-          body: JSON.stringify({
-            event_date: newKey,
-          }),
-        },
-        session.access_token
+          event_date: newKey,
+        }
       );
 
       setActiveMonth(monthNumber);
@@ -772,16 +763,18 @@ export default function App() {
       console.error("Move failed:", e);
 
       setError(
-        `Move failed: ${e.message}`
+        `Move failed: ${
+          e.message || "Appwrite error"
+        }`
       );
     }
 
     setSaving(false);
   };
 
-  // ─────────────────────────────────────────────
-  // SELECTED EVENT
-  // ─────────────────────────────────────────────
+  /* ─────────────────────────────────────────────
+     SELECTED EVENT
+     ───────────────────────────────────────────── */
 
   const selectedEvent = selected
     ? getEvent(
@@ -790,21 +783,15 @@ export default function App() {
       )
     : null;
 
-  // ─────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   return (
     <div className="app">
 
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
       <header className="header">
         <div className="header-inner">
-
-          {/* BRAND */}
 
           <div className="brand">
 
@@ -855,8 +842,6 @@ export default function App() {
 
           </div>
 
-          {/* ADMIN */}
-
           <div className="admin-area">
 
             {saving && (
@@ -891,8 +876,6 @@ export default function App() {
                 🔐 Admin
               </button>
             )}
-
-            {/* LOGIN */}
 
             {showLogin && !isAdmin && (
               <div className="login-panel">
@@ -974,13 +957,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* =================================================
-          MAIN
-          ================================================= */}
-
       <main className="main">
-
-        {/* INTRO */}
 
         <section className="intro">
 
@@ -1002,10 +979,6 @@ export default function App() {
           )}
 
         </section>
-
-        {/* =================================================
-            MONTH TABS
-            ================================================= */}
 
         <div className="month-tabs">
 
@@ -1035,21 +1008,13 @@ export default function App() {
 
         </div>
 
-        {/* ERROR */}
-
         {error && (
           <div className="error-box">
             {error}
           </div>
         )}
 
-        {/* =================================================
-            CALENDAR
-            ================================================= */}
-
         <section className="calendar-card">
-
-          {/* TITLE */}
 
           <div className="calendar-title">
 
@@ -1070,8 +1035,6 @@ export default function App() {
             </div>
 
           </div>
-
-          {/* DAYS */}
 
           <div className="days-header">
 
@@ -1099,8 +1062,6 @@ export default function App() {
             )}
 
           </div>
-
-          {/* CALENDAR GRID */}
 
           <div className="calendar-grid">
 
@@ -1165,8 +1126,6 @@ export default function App() {
                           }
                         >
 
-                          {/* DATE */}
-
                           <div className="date-top">
 
                             <span
@@ -1198,8 +1157,6 @@ export default function App() {
                             )}
 
                           </div>
-
-                          {/* EVENT */}
 
                           {event ? (
                             <div
@@ -1257,10 +1214,6 @@ export default function App() {
 
         </section>
 
-        {/* =================================================
-            LEGEND
-            ================================================= */}
-
         <div className="legend">
 
           {[
@@ -1288,10 +1241,6 @@ export default function App() {
 
         </div>
 
-        {/* =================================================
-            DETAIL PANEL
-            ================================================= */}
-
         <section className="detail-panel">
 
           {!selected ? (
@@ -1309,8 +1258,6 @@ export default function App() {
 
           ) : editing === "add" ||
             editing === "edit" ? (
-
-            /* FORM */
 
             <div>
 
@@ -1463,8 +1410,6 @@ export default function App() {
 
           ) : selectedEvent ? (
 
-            /* EVENT DETAIL */
-
             <div>
 
               <div className="detail-header">
@@ -1516,8 +1461,6 @@ export default function App() {
 
               </div>
 
-              {/* TAGS */}
-
               <div className="tags">
 
                 {(() => {
@@ -1560,15 +1503,11 @@ export default function App() {
 
               </div>
 
-              {/* DESCRIPTION */}
-
               {selectedEvent.description && (
                 <p className="description">
                   {selectedEvent.description}
                 </p>
               )}
-
-              {/* MOVE */}
 
               {!selectedEvent.official &&
                 isAdmin && (
@@ -1653,8 +1592,6 @@ export default function App() {
 
           ) : (
 
-            /* EMPTY DATE */
-
             <div>
 
               <div className="detail-date">
@@ -1694,8 +1631,6 @@ export default function App() {
 
         </section>
 
-        {/* FOOTER */}
-
         <div className="footer-note">
           <strong>
             RB Office Calendar
@@ -1706,10 +1641,6 @@ export default function App() {
         </div>
 
       </main>
-
-      {/* =================================================
-          CSS
-          ================================================= */}
 
       <style>{`
 
@@ -1762,10 +1693,6 @@ export default function App() {
           color: ${C.white};
         }
 
-        /* =================================================
-           APP
-           ================================================= */
-
         .app {
           width: 100%;
           height: 100dvh;
@@ -1787,10 +1714,6 @@ export default function App() {
             "Segoe UI",
             sans-serif;
         }
-
-        /* =================================================
-           HEADER
-           ================================================= */
 
         .header {
           width: 100%;
@@ -1867,10 +1790,6 @@ export default function App() {
           white-space: nowrap;
         }
 
-        /* =================================================
-           ADMIN
-           ================================================= */
-
         .admin-area {
           position: relative;
           flex-shrink: 0;
@@ -1905,16 +1824,9 @@ export default function App() {
 
         .logout-btn,
         .admin-btn {
-          ${Object.entries(buttonBase)
-            .map(([key, value]) => {
-              const kebab = key.replace(
-                /[A-Z]/g,
-                (m) => "-" + m.toLowerCase()
-              );
-              return `${kebab}:${value};`;
-            })
-            .join("")}
-
+          border-radius: 8px;
+          font-family: inherit;
+          cursor: pointer;
           padding: 7px 10px;
           font-size: 9px;
           font-weight: 700;
@@ -1934,7 +1846,6 @@ export default function App() {
             #111d3a
           );
           color: ${C.white};
-          box-shadow: 0 5px 20px rgba(0,0,0,.15);
         }
 
         .login-panel {
@@ -2006,10 +1917,6 @@ export default function App() {
           border: 1px solid ${C.border};
         }
 
-        /* =================================================
-           MAIN
-           ================================================= */
-
         .main {
           width: 100%;
           max-width: 1180px;
@@ -2020,10 +1927,6 @@ export default function App() {
           display: flex;
           flex-direction: column;
         }
-
-        /* =================================================
-           INTRO
-           ================================================= */
 
         .intro {
           flex-shrink: 0;
@@ -2059,10 +1962,6 @@ export default function App() {
           font-size: 9px;
           font-weight: 700;
         }
-
-        /* =================================================
-           MONTH TABS
-           ================================================= */
 
         .month-tabs {
           flex-shrink: 0;
@@ -2101,10 +2000,6 @@ export default function App() {
           border-color: ${C.lime};
         }
 
-        /* =================================================
-           ERROR
-           ================================================= */
-
         .error-box {
           flex-shrink: 0;
           background: ${C.redDim};
@@ -2115,10 +2010,6 @@ export default function App() {
           font-size: 9px;
           margin-bottom: 7px;
         }
-
-        /* =================================================
-           CALENDAR
-           ================================================= */
 
         .calendar-card {
           flex-shrink: 0;
@@ -2306,10 +2197,6 @@ export default function App() {
           border-radius: 2px;
         }
 
-        /* =================================================
-           LEGEND
-           ================================================= */
-
         .legend {
           flex-shrink: 0;
           display: flex;
@@ -2333,10 +2220,6 @@ export default function App() {
           height: 2px;
           border-radius: 2px;
         }
-
-        /* =================================================
-           DETAIL
-           ================================================= */
 
         .detail-panel {
           flex: 1;
@@ -2514,10 +2397,6 @@ export default function App() {
           cursor: pointer;
         }
 
-        /* =================================================
-           FORM
-           ================================================= */
-
         .form-heading {
           margin-bottom: 7px;
         }
@@ -2605,10 +2484,6 @@ export default function App() {
           font-weight: 850;
         }
 
-        /* =================================================
-           FOOTER
-           ================================================= */
-
         .footer-note {
           flex-shrink: 0;
           margin-top: 5px;
@@ -2620,10 +2495,6 @@ export default function App() {
         .footer-note strong {
           color: ${C.textMuted};
         }
-
-        /* =================================================
-           TABLET
-           ================================================= */
 
         @media (max-width: 800px) {
 
@@ -2670,10 +2541,6 @@ export default function App() {
             padding: 10px 12px;
           }
         }
-
-        /* =================================================
-           MOBILE
-           ================================================= */
 
         @media (max-width: 560px) {
 
@@ -3035,10 +2902,6 @@ export default function App() {
           }
         }
 
-        /* =================================================
-           VERY SMALL MOBILE
-           ================================================= */
-
         @media (max-width: 380px) {
 
           .brand h1 {
@@ -3085,4 +2948,3 @@ export default function App() {
     </div>
   );
 }
-```
