@@ -14,10 +14,6 @@ import {
    SEPTEMBER TO DECEMBER 2026
    ========================================================= */
 
-/* ─────────────────────────────────────────────
-   APPWRITE
-   ───────────────────────────────────────────── */
-
 const APPWRITE_ENDPOINT = "https://fra.cloud.appwrite.io/v1";
 const APPWRITE_PROJECT_ID = "6a9698ce00010509b898";
 const DATABASE_ID = "database-6a969bf50001918a6620";
@@ -348,7 +344,7 @@ export default function App() {
   }, []);
 
   /* ─────────────────────────────────────────────
-     FETCH EVENTS
+     FETCH EVENTS — FIXED
      ───────────────────────────────────────────── */
 
   const fetchEvents = useCallback(async () => {
@@ -381,14 +377,15 @@ export default function App() {
       setDbEvents(map);
       setError(null);
     } catch (e) {
-  console.error("Login failed:", e);
+      console.error("Fetch events failed:", e);
 
-  setLoginError(
-    e?.message || "Login failed. Please try again."
-  );
-}
-
-    setLoaded(true);
+      setError(
+        e?.message ||
+          "Unable to load events from Appwrite."
+      );
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -449,10 +446,11 @@ export default function App() {
     setLoginError(null);
 
     try {
-      const user = await account.createEmailPasswordSession(
-        loginForm.email.trim(),
-        loginForm.password
-      );
+      const user =
+        await account.createEmailPasswordSession(
+          loginForm.email.trim(),
+          loginForm.password
+        );
 
       setSession(user);
       setShowLogin(false);
@@ -467,11 +465,12 @@ export default function App() {
       console.error("Login failed:", e);
 
       setLoginError(
-        "Login failed. Check your email and password."
+        e?.message ||
+          "Login failed. Check your email and password."
       );
+    } finally {
+      setLoginLoading(false);
     }
-
-    setLoginLoading(false);
   };
 
   /* ─────────────────────────────────────────────
@@ -619,12 +618,12 @@ export default function App() {
 
       setError(
         `Save failed: ${
-          e.message || "Appwrite error"
+          e?.message || "Appwrite error"
         }`
       );
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   /* ─────────────────────────────────────────────
@@ -668,12 +667,12 @@ export default function App() {
 
       setError(
         `Delete failed: ${
-          e.message || "Appwrite error"
+          e?.message || "Appwrite error"
         }`
       );
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   /* ─────────────────────────────────────────────
@@ -764,12 +763,12 @@ export default function App() {
 
       setError(
         `Move failed: ${
-          e.message || "Appwrite error"
+          e?.message || "Appwrite error"
         }`
       );
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   /* ─────────────────────────────────────────────
