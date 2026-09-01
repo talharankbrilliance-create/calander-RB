@@ -19,7 +19,7 @@ import {
    ───────────────────────────────────────────── */
 
 const APPWRITE_ENDPOINT = "https://fra.cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID = "fra-6a9698ce00010509b898";
+const APPWRITE_PROJECT_ID = "6a9698ce00010509b898";
 const DATABASE_ID = "database-6a969bf50001918a6620";
 const TABLE_ID = "events";
 
@@ -381,12 +381,12 @@ export default function App() {
       setDbEvents(map);
       setError(null);
     } catch (e) {
-      console.error("Fetch events failed:", e);
+  console.error("Login failed:", e);
 
-      setError(
-        "Could not load events from Appwrite. Check your table permissions."
-      );
-    }
+  setLoginError(
+    e?.message || "Login failed. Please try again."
+  );
+}
 
     setLoaded(true);
   }, []);
