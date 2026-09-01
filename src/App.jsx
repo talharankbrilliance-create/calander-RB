@@ -464,13 +464,13 @@ export default function App() {
       });
 
       setError(null);
-    } catch (e) {
-      console.error("Login failed:", e);
+   } catch (e) {
+  console.error("Login failed:", e);
 
-      setLoginError(
-        "Login failed. Check your email and password."
-      );
-    }
+  setLoginError(
+    e?.message || "Login failed. Please try again."
+  );
+}
 
     setLoginLoading(false);
   };
