@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 /* =========================================================
    RB OFFICE CALENDAR — SEPTEMBER TO DECEMBER 2026
-   FULL SCREEN / NO PAGE SCROLL VERSION
+   RESPONSIVE / NO PAGE SCROLL VERSION
    ========================================================= */
 
 // ─────────────────────────────────────────────
@@ -219,25 +219,14 @@ function getDaysInMonth(year, month) {
 }
 
 function getMondayBasedOffset(year, month) {
-  const firstDay = new Date(
-    year,
-    month - 1,
-    1
-  ).getDay();
+  const firstDay = new Date(year, month - 1, 1).getDay();
 
   return firstDay === 0 ? 6 : firstDay - 1;
 }
 
 function buildMonthGrid(month) {
-  const daysInMonth = getDaysInMonth(
-    YEAR,
-    month
-  );
-
-  const offset = getMondayBasedOffset(
-    YEAR,
-    month
-  );
+  const daysInMonth = getDaysInMonth(YEAR, month);
+  const offset = getMondayBasedOffset(YEAR, month);
 
   const cells = [];
 
@@ -245,11 +234,7 @@ function buildMonthGrid(month) {
     cells.push(null);
   }
 
-  for (
-    let day = 1;
-    day <= daysInMonth;
-    day++
-  ) {
+  for (let day = 1; day <= daysInMonth; day++) {
     cells.push(day);
   }
 
@@ -259,11 +244,7 @@ function buildMonthGrid(month) {
 
   const rows = [];
 
-  for (
-    let i = 0;
-    i < cells.length;
-    i += 7
-  ) {
+  for (let i = 0; i < cells.length; i += 7) {
     rows.push(cells.slice(i, i + 7));
   }
 
@@ -271,27 +252,15 @@ function buildMonthGrid(month) {
 }
 
 function getDayName(year, month, day) {
-  const date = new Date(
-    year,
-    month - 1,
-    day
-  );
-
+  const date = new Date(year, month - 1, day);
   const jsDay = date.getDay();
 
-  return DAYS_HEADER[
-    jsDay === 0 ? 6 : jsDay - 1
-  ];
+  return DAYS_HEADER[jsDay === 0 ? 6 : jsDay - 1];
 }
 
-function formatDateForDisplay(
-  month,
-  day
-) {
+function formatDateForDisplay(month, day) {
   const monthName =
-    MONTHS.find(
-      (m) => m.month === month
-    )?.name || "";
+    MONTHS.find((m) => m.month === month)?.name || "";
 
   return `${day} ${monthName} ${YEAR}`;
 }
@@ -305,23 +274,16 @@ function rowToEvent(row) {
     id: row.id,
     date: row.event_date,
     name: row.event_name,
-    type:
-      row.event_type ||
-      "Custom Event",
+    type: row.event_type || "Custom Event",
     holiday: row.is_public_holiday
       ? "Public Holiday"
       : "Not a Public Holiday",
-    description:
-      row.description || "",
+    description: row.description || "",
     official: false,
-    isOffice: Boolean(
-      row.is_office_event
-    ),
+    isOffice: Boolean(row.is_office_event),
     color: row.is_office_event
       ? C.green
-      : getTypeStyle(
-          row.event_type
-        ).color,
+      : getTypeStyle(row.event_type).color,
   };
 }
 
@@ -330,13 +292,12 @@ function rowToEvent(row) {
 // ─────────────────────────────────────────────
 
 const inputStyle = {
-  background:
-    "rgba(255,255,255,0.045)",
+  background: "rgba(255,255,255,0.045)",
   border: `1px solid ${C.border}`,
   borderRadius: 8,
-  padding: "9px 11px",
+  padding: "10px 12px",
   color: C.white,
-  fontSize: 12,
+  fontSize: 13,
   outline: "none",
   width: "100%",
   boxSizing: "border-box",
@@ -354,26 +315,13 @@ const buttonBase = {
 // =========================================================
 
 export default function App() {
-  const [activeMonth, setActiveMonth] =
-    useState(9);
-
-  const [selected, setSelected] =
-    useState(null);
-
-  const [dbEvents, setDbEvents] =
-    useState({});
-
-  const [loaded, setLoaded] =
-    useState(false);
-
-  const [error, setError] =
-    useState(null);
-
-  const [editing, setEditing] =
-    useState(null);
-
-  const [saving, setSaving] =
-    useState(false);
+  const [activeMonth, setActiveMonth] = useState(9);
+  const [selected, setSelected] = useState(null);
+  const [dbEvents, setDbEvents] = useState({});
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   // ─────────────────────────────────────────────
   // FORM
@@ -387,86 +335,76 @@ export default function App() {
     isOffice: true,
   };
 
-  const [form, setForm] =
-    useState(emptyForm);
+  const [form, setForm] = useState(emptyForm);
 
   // ─────────────────────────────────────────────
   // AUTH
   // ─────────────────────────────────────────────
 
-  const [session, setSession] =
-    useState(null);
+  const [session, setSession] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
 
-  const [showLogin, setShowLogin] =
-    useState(false);
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
 
-  const [loginForm, setLoginForm] =
-    useState({
-      email: "",
-      password: "",
-    });
+  const [loginError, setLoginError] = useState(null);
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [loginError, setLoginError] =
-    useState(null);
-
-  const [loginLoading, setLoginLoading] =
-    useState(false);
-
-  const isAdmin = Boolean(
-    session?.access_token
-  );
+  const isAdmin = Boolean(session?.access_token);
 
   // ─────────────────────────────────────────────
   // CURRENT MONTH
   // ─────────────────────────────────────────────
 
   const currentMonth =
-    MONTHS.find(
-      (item) =>
-        item.month === activeMonth
-    ) || MONTHS[0];
+    MONTHS.find((item) => item.month === activeMonth) ||
+    MONTHS[0];
 
   // ─────────────────────────────────────────────
   // FETCH EVENTS
   // ─────────────────────────────────────────────
 
-  const fetchEvents =
-    useCallback(async () => {
-      try {
-        const rows = await sbFetch(
-          `/rest/v1/events?select=*&event_date=gte.${YEAR}-09-01&event_date=lte.${YEAR}-12-31&order=event_date.asc`,
-          {
-            method: "GET",
-          },
-          session?.access_token
-        );
+  const fetchEvents = useCallback(async () => {
+    try {
+      const rows = await sbFetch(
+        `/rest/v1/events?select=*&event_date=gte.${YEAR}-09-01&event_date=lte.${YEAR}-12-31&order=event_date.asc`,
+        {
+          method: "GET",
+        },
+        session?.access_token
+      );
 
-        const map = {};
+      const map = {};
 
-        (rows || []).forEach(
-          (row) => {
-            if (row.event_date) {
-              map[row.event_date] =
-                rowToEvent(row);
-            }
-          }
-        );
+      (rows || []).forEach((row) => {
+        if (!row.event_date) return;
 
-        setDbEvents(map);
-        setError(null);
-      } catch (e) {
-        console.error(
-          "Fetch events failed:",
-          e
-        );
+        const event = rowToEvent(row);
 
-        setError(
-          "Could not load events from database."
-        );
-      }
+        /*
+         * One event per date is assumed by this calendar.
+         * If multiple rows exist on the same date,
+         * keep the first one.
+         */
+        if (!map[row.event_date]) {
+          map[row.event_date] = event;
+        }
+      });
 
-      setLoaded(true);
-    }, [session]);
+      setDbEvents(map);
+      setError(null);
+    } catch (e) {
+      console.error("Fetch events failed:", e);
+
+      setError(
+        "Could not load events from database."
+      );
+    }
+
+    setLoaded(true);
+  }, [session]);
 
   useEffect(() => {
     fetchEvents();
@@ -476,15 +414,8 @@ export default function App() {
   // GET EVENT
   // ─────────────────────────────────────────────
 
-  const getEvent = (
-    month,
-    day
-  ) => {
-    const key = dateKey(
-      YEAR,
-      month,
-      day
-    );
+  const getEvent = (month, day) => {
+    const key = dateKey(YEAR, month, day);
 
     return (
       OFFICIAL_EVENTS[key] ||
@@ -504,6 +435,7 @@ export default function App() {
     });
 
     setEditing(null);
+    setError(null);
   };
 
   // ─────────────────────────────────────────────
@@ -523,7 +455,7 @@ export default function App() {
 
   const handleLogin = async () => {
     if (
-      !loginForm.email ||
+      !loginForm.email.trim() ||
       !loginForm.password
     ) {
       setLoginError(
@@ -541,18 +473,15 @@ export default function App() {
         {
           method: "POST",
           body: JSON.stringify({
-            email:
-              loginForm.email,
-            password:
-              loginForm.password,
+            email: loginForm.email.trim(),
+            password: loginForm.password,
           }),
         }
       );
 
       if (data?.access_token) {
         setSession({
-          access_token:
-            data.access_token,
+          access_token: data.access_token,
           user: data.user,
         });
 
@@ -568,10 +497,7 @@ export default function App() {
         );
       }
     } catch (e) {
-      console.error(
-        "Login failed:",
-        e
-      );
+      console.error("Login failed:", e);
 
       setLoginError(
         "Login failed. Check your credentials."
@@ -590,6 +516,7 @@ export default function App() {
     setEditing(null);
     setSelected(null);
     setShowLogin(false);
+    setLoginError(null);
   };
 
   // ─────────────────────────────────────────────
@@ -597,8 +524,7 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const openAdd = () => {
-    if (!isAdmin || !selected)
-      return;
+    if (!isAdmin || !selected) return;
 
     const selectedKey = dateKey(
       YEAR,
@@ -606,13 +532,16 @@ export default function App() {
       selected.day
     );
 
-    if (
-      OFFICIAL_EVENTS[
-        selectedKey
-      ]
-    ) {
+    if (OFFICIAL_EVENTS[selectedKey]) {
       setError(
         "This is an official event and cannot be edited."
+      );
+      return;
+    }
+
+    if (dbEvents[selectedKey]) {
+      setError(
+        "This date already has an event."
       );
       return;
     }
@@ -630,27 +559,18 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const openEdit = (event) => {
-    if (
-      !isAdmin ||
-      !event ||
-      event.official
-    ) {
+    if (!isAdmin || !event || event.official) {
       return;
     }
 
     setForm({
       name: event.name,
-      type:
-        event.type ||
-        "Custom Event",
+      type: event.type || "Custom Event",
       holiday:
         event.holiday ||
         "Not a Public Holiday",
-      description:
-        event.description || "",
-      isOffice: Boolean(
-        event.isOffice
-      ),
+      description: event.description || "",
+      isOffice: Boolean(event.isOffice),
     });
 
     setEditing("edit");
@@ -665,7 +585,8 @@ export default function App() {
     if (
       !form.name.trim() ||
       !selected ||
-      !isAdmin
+      !isAdmin ||
+      saving
     ) {
       return;
     }
@@ -685,26 +606,21 @@ export default function App() {
 
       const body = {
         event_date: key,
-        event_name:
-          form.name.trim(),
+        event_name: form.name.trim(),
         event_type:
-          form.type.trim() ||
-          "Custom Event",
+          form.type.trim() || "Custom Event",
         is_public_holiday:
           holidayText.includes(
             "public holiday"
           ) &&
-          !holidayText.includes(
-            "not"
-          ),
+          !holidayText.includes("not"),
         description:
           form.description.trim(),
         is_office_event:
-          form.isOffice,
+          Boolean(form.isOffice),
       };
 
-      const existing =
-        dbEvents[key];
+      const existing = dbEvents[key];
 
       if (
         editing === "edit" &&
@@ -714,33 +630,37 @@ export default function App() {
           `/rest/v1/events?id=eq.${existing.id}`,
           {
             method: "PATCH",
-            body: JSON.stringify(
-              body
-            ),
+            body: JSON.stringify(body),
           },
           session.access_token
         );
       } else {
+        if (OFFICIAL_EVENTS[key]) {
+          throw new Error(
+            "Official dates cannot be overwritten."
+          );
+        }
+
+        if (existing) {
+          throw new Error(
+            "An event already exists on this date."
+          );
+        }
+
         await sbFetch(
           "/rest/v1/events",
           {
             method: "POST",
-            body: JSON.stringify(
-              body
-            ),
+            body: JSON.stringify(body),
           },
           session.access_token
         );
       }
 
       setEditing(null);
-
       await fetchEvents();
     } catch (e) {
-      console.error(
-        "Save failed:",
-        e
-      );
+      console.error("Save failed:", e);
 
       setError(
         `Save failed: ${e.message}`
@@ -757,7 +677,8 @@ export default function App() {
   const deleteEvent = async () => {
     if (
       !selected ||
-      !isAdmin
+      !isAdmin ||
+      saving
     ) {
       return;
     }
@@ -768,15 +689,13 @@ export default function App() {
       selected.day
     );
 
-    const event =
-      dbEvents[key];
+    const event = dbEvents[key];
 
     if (!event) return;
 
-    const confirmed =
-      window.confirm(
-        `Delete "${event.name}"?`
-      );
+    const confirmed = window.confirm(
+      `Delete "${event.name}"?`
+    );
 
     if (!confirmed) return;
 
@@ -796,10 +715,7 @@ export default function App() {
 
       await fetchEvents();
     } catch (e) {
-      console.error(
-        "Delete failed:",
-        e
-      );
+      console.error("Delete failed:", e);
 
       setError(
         `Delete failed: ${e.message}`
@@ -819,7 +735,8 @@ export default function App() {
   ) => {
     if (
       !selected ||
-      !isAdmin
+      !isAdmin ||
+      saving
     ) {
       return;
     }
@@ -830,24 +747,26 @@ export default function App() {
       selected.day
     );
 
-    const event =
-      dbEvents[oldKey];
+    const event = dbEvents[oldKey];
 
     if (!event) return;
 
-    const dayNumber =
-      parseInt(newDay, 10);
+    const dayNumber = parseInt(
+      newDay,
+      10
+    );
 
-    const monthNumber =
-      parseInt(newMonth, 10);
+    const monthNumber = parseInt(
+      newMonth,
+      10
+    );
 
     if (
       !MONTHS.some(
-        (m) =>
-          m.month ===
-          monthNumber
+        (m) => m.month === monthNumber
       )
     ) {
+      setError("Invalid month.");
       return;
     }
 
@@ -862,6 +781,9 @@ export default function App() {
       dayNumber < 1 ||
       dayNumber > maxDays
     ) {
+      setError(
+        `Please enter a valid day between 1 and ${maxDays}.`
+      );
       return;
     }
 
@@ -872,9 +794,7 @@ export default function App() {
     );
 
     if (
-      OFFICIAL_EVENTS[
-        newKey
-      ] ||
+      OFFICIAL_EVENTS[newKey] ||
       dbEvents[newKey]
     ) {
       setError(
@@ -892,16 +812,13 @@ export default function App() {
         {
           method: "PATCH",
           body: JSON.stringify({
-            event_date:
-              newKey,
+            event_date: newKey,
           }),
         },
         session.access_token
       );
 
-      setActiveMonth(
-        monthNumber
-      );
+      setActiveMonth(monthNumber);
 
       setSelected({
         month: monthNumber,
@@ -910,10 +827,7 @@ export default function App() {
 
       await fetchEvents();
     } catch (e) {
-      console.error(
-        "Move failed:",
-        e
-      );
+      console.error("Move failed:", e);
 
       setError(
         `Move failed: ${e.message}`
@@ -927,459 +841,193 @@ export default function App() {
   // SELECTED EVENT
   // ─────────────────────────────────────────────
 
-  const selectedEvent =
-    selected
-      ? getEvent(
-          selected.month,
-          selected.day
-        )
-      : null;
+  const selectedEvent = selected
+    ? getEvent(
+        selected.month,
+        selected.day
+      )
+    : null;
 
-  // ─────────────────────────────────────────────
+  // =========================================================
   // RENDER
-  // ─────────────────────────────────────────────
+  // =========================================================
 
   return (
-    <div
-      className="app-shell"
-      style={{
-        width: "100%",
-        height: "100vh",
-        overflow: "hidden",
-        background: `
-          radial-gradient(
-            circle at 50% -10%,
-            rgba(78,153,247,0.08),
-            transparent 38%
-          ),
-          ${C.navy}
-        `,
-        color: C.white,
-        fontFamily:
-          "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
+    <div className="app-shell">
+
       {/* =================================================
           HEADER
           ================================================= */}
 
-      <header
-        className="app-header"
-        style={{
-          width: "100%",
-          height: 78,
-          borderBottom:
-            `1px solid ${C.border}`,
-          background:
-            "rgba(8,17,38,0.95)",
-          backdropFilter:
-            "blur(12px)",
-          position: "relative",
-          zIndex: 20,
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 1180,
-            height: "100%",
-            margin: "0 auto",
-            padding:
-              "10px 22px",
-          }}
-        >
-          <div
-            style={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent:
-                "space-between",
-              gap: 15,
-            }}
-          >
-            {/* BRAND */}
+      <header className="top-header">
+        <div className="header-inner">
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                minWidth: 0,
-              }}
-            >
-              <div
-                className="brand-logo"
-                style={{
-                  width: 45,
-                  height: 45,
-                  borderRadius: 11,
-                  background:
-                    "linear-gradient(135deg,#16264b,#0e1933)",
-                  border:
-                    `1px solid ${C.border}`,
-                  display: "flex",
-                  alignItems:
-                    "center",
-                  justifyContent:
-                    "center",
-                  flexShrink: 0,
-                }}
+          {/* BRAND */}
+
+          <div className="brand">
+
+            <div className="brand-logo">
+              <svg
+                width="36"
+                height="36"
+                viewBox="0 0 36 36"
               >
-                <svg
-                  width="34"
-                  height="34"
-                  viewBox="0 0 36 36"
+                <text
+                  x="1"
+                  y="27"
+                  fontFamily="Arial Black, Impact, sans-serif"
+                  fontWeight="900"
+                  fontSize="24"
+                  fill={C.lime}
                 >
-                  <text
-                    x="1"
-                    y="27"
-                    fontFamily="Arial Black, Impact, sans-serif"
-                    fontWeight="900"
-                    fontSize="24"
-                    fill={C.lime}
-                  >
-                    R
-                  </text>
+                  R
+                </text>
 
-                  <text
-                    x="16"
-                    y="27"
-                    fontFamily="Arial Black, Impact, sans-serif"
-                    fontWeight="900"
-                    fontSize="24"
-                    fill="#fff"
-                  >
-                    B
-                  </text>
-                </svg>
-              </div>
-
-              <div
-                style={{
-                  minWidth: 0,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 9,
-                    color: C.lime,
-                    fontWeight: 700,
-                    letterSpacing:
-                      "1.4px",
-                    textTransform:
-                      "uppercase",
-                  }}
+                <text
+                  x="16"
+                  y="27"
+                  fontFamily="Arial Black, Impact, sans-serif"
+                  fontWeight="900"
+                  fontSize="24"
+                  fill="#fff"
                 >
-                  Office Planning
-                </div>
-
-                <h1
-                  style={{
-                    margin: "2px 0 0",
-                    fontSize: 21,
-                    lineHeight: 1.1,
-                    fontWeight: 750,
-                    letterSpacing:
-                      "-0.5px",
-                  }}
-                >
-                  RB Office Calendar
-                </h1>
-
-                <p
-                  className="header-description"
-                  style={{
-                    margin:
-                      "3px 0 0",
-                    color:
-                      C.textMuted,
-                    fontSize: 10,
-                    whiteSpace:
-                      "nowrap",
-                  }}
-                >
-                  Plan meetings, office
-                  activities, travel &
-                  important events
-                </p>
-              </div>
+                  B
+                </text>
+              </svg>
             </div>
 
-            {/* ADMIN */}
+            <div className="brand-copy">
 
-            <div
-              style={{
-                position:
-                  "relative",
-                flexShrink: 0,
-              }}
-            >
-              {saving && (
-                <span
-                  style={{
-                    position:
-                      "absolute",
-                    right: 0,
-                    top: -17,
-                    fontSize: 9,
-                    color:
-                      C.lime,
-                  }}
-                >
-                  Saving…
-                </span>
-              )}
+              <div className="eyebrow">
+                Office Planning
+              </div>
 
-              {isAdmin ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems:
-                      "center",
-                    gap: 7,
-                  }}
+              <h1>
+                RB Office Calendar
+              </h1>
+
+              <p>
+                Plan meetings, office activities,
+                travel & important events
+              </p>
+
+            </div>
+          </div>
+
+          {/* ADMIN */}
+
+          <div className="admin-area">
+
+            {saving && (
+              <span className="saving-label">
+                Saving…
+              </span>
+            )}
+
+            {isAdmin ? (
+              <div className="admin-actions">
+
+                <div className="admin-badge">
+                  <span>●</span>
+                  Admin Mode
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="logout-btn"
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems:
-                        "center",
-                      gap: 6,
-                      padding:
-                        "7px 10px",
-                      borderRadius: 8,
-                      background:
-                        C.greenDim,
-                      border:
-                        `1px solid rgba(52,211,153,.22)`,
-                      color:
-                        C.green,
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span>●</span>
-                    Admin Mode
+                  Logout
+                </button>
+
+              </div>
+            ) : (
+              <button
+                onClick={() =>
+                  setShowLogin(!showLogin)
+                }
+                className="admin-btn"
+              >
+                🔐 Admin
+              </button>
+            )}
+
+            {/* LOGIN */}
+
+            {showLogin && !isAdmin && (
+              <div className="login-panel">
+
+                <div className="login-heading">
+                  <div className="login-title">
+                    Admin Login
                   </div>
 
-                  <button
-                    onClick={
-                      handleLogout
-                    }
-                    style={{
-                      ...buttonBase,
-                      padding:
-                        "7px 11px",
-                      border:
-                        `1px solid ${C.border}`,
-                      background:
-                        "transparent",
-                      color:
-                        C.textMuted,
-                      fontSize: 10,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Logout
-                  </button>
+                  <div className="login-subtitle">
+                    Sign in to manage office events
+                  </div>
                 </div>
-              ) : (
-                <button
-                  onClick={() =>
-                    setShowLogin(
-                      !showLogin
-                    )
+
+                <input
+                  placeholder="Email"
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) =>
+                    setLoginForm({
+                      ...loginForm,
+                      email: e.target.value,
+                    })
                   }
-                  style={{
-                    ...buttonBase,
-                    padding:
-                      "8px 14px",
-                    border:
-                      `1px solid ${C.border}`,
-                    background:
-                      "linear-gradient(135deg,#17264a,#111d3a)",
-                    color: C.white,
-                    fontSize: 11,
-                    fontWeight: 700,
+                  className="form-input"
+                />
+
+                <input
+                  placeholder="Password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) =>
+                    setLoginForm({
+                      ...loginForm,
+                      password: e.target.value,
+                    })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleLogin();
+                    }
                   }}
-                >
-                  🔐 Admin
-                </button>
-              )}
+                  className="form-input"
+                />
 
-              {/* LOGIN PANEL */}
-
-              {showLogin &&
-                !isAdmin && (
-                  <div
-                    className="login-panel"
-                    style={{
-                      position:
-                        "absolute",
-                      top:
-                        "calc(100% + 9px)",
-                      right: 0,
-                      width: 300,
-                      background:
-                        C.card,
-                      border:
-                        `1px solid ${C.border}`,
-                      borderRadius: 11,
-                      padding: 15,
-                      boxShadow:
-                        "0 18px 50px rgba(0,0,0,.45)",
-                      zIndex: 100,
-                    }}
-                  >
-                    <div
-                      style={{
-                        marginBottom:
-                          10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                        }}
-                      >
-                        Admin Login
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color:
-                            C.textMuted,
-                          marginTop: 2,
-                        }}
-                      >
-                        Sign in to manage
-                        office events
-                      </div>
-                    </div>
-
-                    <input
-                      placeholder="Email"
-                      type="email"
-                      value={
-                        loginForm.email
-                      }
-                      onChange={(e) =>
-                        setLoginForm({
-                          ...loginForm,
-                          email:
-                            e.target.value,
-                        })
-                      }
-                      style={{
-                        ...inputStyle,
-                        marginBottom: 7,
-                      }}
-                    />
-
-                    <input
-                      placeholder="Password"
-                      type="password"
-                      value={
-                        loginForm.password
-                      }
-                      onChange={(e) =>
-                        setLoginForm({
-                          ...loginForm,
-                          password:
-                            e.target.value,
-                        })
-                      }
-                      onKeyDown={(e) => {
-                        if (
-                          e.key ===
-                          "Enter"
-                        ) {
-                          handleLogin();
-                        }
-                      }}
-                      style={{
-                        ...inputStyle,
-                        marginBottom: 8,
-                      }}
-                    />
-
-                    {loginError && (
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color:
-                            C.red,
-                          marginBottom:
-                            8,
-                        }}
-                      >
-                        {loginError}
-                      </div>
-                    )}
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 6,
-                      }}
-                    >
-                      <button
-                        onClick={
-                          handleLogin
-                        }
-                        disabled={
-                          loginLoading
-                        }
-                        style={{
-                          ...buttonBase,
-                          padding:
-                            "8px 14px",
-                          background:
-                            C.lime,
-                          color:
-                            C.navy,
-                          border:
-                            "none",
-                          fontSize: 11,
-                          fontWeight: 800,
-                        }}
-                      >
-                        {loginLoading
-                          ? "Signing in…"
-                          : "Sign in"}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowLogin(
-                            false
-                          );
-                          setLoginError(
-                            null
-                          );
-                        }}
-                        style={{
-                          ...buttonBase,
-                          padding:
-                            "8px 13px",
-                          background:
-                            "transparent",
-                          color:
-                            C.textMuted,
-                          border:
-                            `1px solid ${C.border}`,
-                          fontSize: 11,
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                {loginError && (
+                  <div className="login-error">
+                    {loginError}
                   </div>
                 )}
-            </div>
+
+                <div className="login-buttons">
+
+                  <button
+                    onClick={handleLogin}
+                    disabled={loginLoading}
+                    className="primary-btn"
+                  >
+                    {loginLoading
+                      ? "Signing in…"
+                      : "Sign in"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowLogin(false);
+                      setLoginError(null);
+                    }}
+                    className="secondary-btn"
+                  >
+                    Cancel
+                  </button>
+
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -1388,192 +1036,68 @@ export default function App() {
           MAIN
           ================================================= */}
 
-      <main
-        className="main-area"
-        style={{
-          width: "100%",
-          maxWidth: 1180,
-          height:
-            "calc(100vh - 78px)",
-          margin: "0 auto",
-          padding:
-            "14px 22px 12px",
-          boxSizing: "border-box",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection:
-            "column",
-        }}
-      >
+      <main className="main-content">
+
         {/* INTRO */}
 
-        <section
-          className="intro-section"
-          style={{
-            flexShrink: 0,
-            marginBottom: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems:
-                "center",
-              justifyContent:
-                "space-between",
-              gap: 10,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  color:
-                    C.textMuted,
-                  fontSize: 9,
-                  fontWeight: 600,
-                  letterSpacing:
-                    ".4px",
-                  marginBottom:
-                    3,
-                }}
-              >
-                OFFICE CALENDAR ·{" "}
-                {YEAR}
-              </div>
+        <section className="intro-section">
 
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  lineHeight: 1.1,
-                  fontWeight: 750,
-                  letterSpacing:
-                    "-.5px",
-                }}
-              >
-                Keep the whole team
-                <span
-                  style={{
-                    color:
-                      C.lime,
-                  }}
-                >
-                  {" "}
-                  on track.
-                </span>
-              </h2>
+          <div>
+            <div className="section-label">
+              OFFICE CALENDAR · {YEAR}
             </div>
 
-            {isAdmin && (
-              <div
-                style={{
-                  color:
-                    C.green,
-                  fontSize: 10,
-                  fontWeight: 600,
-                }}
-              >
-                ● You can manage
-                events
-              </div>
-            )}
+            <h2>
+              Keep the whole team
+              <span> on track.</span>
+            </h2>
           </div>
+
+          {isAdmin && (
+            <div className="admin-status">
+              ● You can manage events
+            </div>
+          )}
+
         </section>
 
         {/* =================================================
             MONTH TABS
             ================================================= */}
 
-        <div
-          className="month-tabs"
-          style={{
-            background:
-              "rgba(17,29,58,.75)",
-            border:
-              `1px solid ${C.border}`,
-            borderRadius: 10,
-            padding: 4,
-            display: "flex",
-            gap: 4,
-            marginBottom: 10,
-            overflowX: "auto",
-            flexShrink: 0,
-          }}
-        >
-          {MONTHS.map(
-            (month) => {
-              const active =
-                month.month ===
-                activeMonth;
+        <div className="month-tabs">
 
-              return (
-                <button
-                  key={
-                    month.month
-                  }
-                  onClick={() =>
-                    changeMonth(
-                      month.month
-                    )
-                  }
-                  style={{
-                    ...buttonBase,
-                    flex: 1,
-                    minWidth: 105,
-                    padding:
-                      "8px 12px",
-                    border:
-                      active
-                        ? `1px solid ${C.lime}`
-                        : "1px solid transparent",
-                    background:
-                      active
-                        ? C.limeDim
-                        : "transparent",
-                    color:
-                      active
-                        ? C.lime
-                        : C.textMuted,
-                    fontSize: 11,
-                    fontWeight: 750,
-                  }}
-                >
-                  {month.name}{" "}
-                  <span
-                    style={{
-                      opacity:
-                        0.5,
-                      fontWeight:
-                        500,
-                    }}
-                  >
-                    {YEAR}
-                  </span>
-                </button>
-              );
-            }
-          )}
+          {MONTHS.map((month) => {
+            const active =
+              month.month === activeMonth;
+
+            return (
+              <button
+                key={month.month}
+                onClick={() =>
+                  changeMonth(month.month)
+                }
+                className={
+                  active
+                    ? "month-tab active"
+                    : "month-tab"
+                }
+              >
+                {month.name}
+
+                <span>
+                  {YEAR}
+                </span>
+              </button>
+            );
+          })}
+
         </div>
 
         {/* ERROR */}
 
         {error && (
-          <div
-            className="error-box"
-            style={{
-              background:
-                C.redDim,
-              border:
-                `1px solid rgba(224,82,101,.25)`,
-              color: C.red,
-              padding:
-                "7px 11px",
-              borderRadius: 8,
-              fontSize: 10,
-              marginBottom: 8,
-              flexShrink: 0,
-            }}
-          >
+          <div className="error-box">
             {error}
           </div>
         )}
@@ -1582,181 +1106,78 @@ export default function App() {
             CALENDAR
             ================================================= */}
 
-        <section
-          className="calendar-section"
-          style={{
-            background:
-              "rgba(17,29,58,.7)",
-            border:
-              `1px solid ${C.border}`,
-            borderRadius: 13,
-            overflow: "hidden",
-            boxShadow:
-              "0 15px 50px rgba(0,0,0,.18)",
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection:
-              "column",
-          }}
-        >
-          {/* CALENDAR TITLE BAR */}
+        <section className="calendar-card">
 
-          <div
-            className="calendar-title"
-            style={{
-              padding:
-                "10px 15px",
-              borderBottom:
-                `1px solid ${C.border}`,
-              display: "flex",
-              justifyContent:
-                "space-between",
-              alignItems:
-                "center",
-              gap: 10,
-              flexShrink: 0,
-            }}
-          >
+          {/* TITLE */}
+
+          <div className="calendar-titlebar">
+
             <div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 750,
-                }}
-              >
-                {currentMonth.name}{" "}
-                {YEAR}
+              <div className="calendar-title">
+                {currentMonth.name} {YEAR}
               </div>
 
-              <div
-                style={{
-                  marginTop: 2,
-                  fontSize: 9,
-                  color:
-                    C.textMuted,
-                }}
-              >
-                Click any date to view
-                details
+              <div className="calendar-subtitle">
+                Click any date to view details
               </div>
             </div>
 
-            <div
-              style={{
-                fontSize: 9,
-                color:
-                  C.textMuted,
-              }}
-            >
+            <div className="sync-status">
               {loaded
                 ? "✓ Events synced"
                 : "Loading events…"}
             </div>
+
           </div>
 
-          {/* DAY HEADERS */}
+          {/* CALENDAR SCROLL CONTAINER */}
 
-          <div
-            className="day-headers"
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(7, minmax(0, 1fr))",
-              gap: 1,
-              background:
-                C.border,
-              flexShrink: 0,
-            }}
-          >
-            {DAYS_HEADER.map(
-              (
-                dayName,
-                index
-              ) => (
+          <div className="calendar-scroll">
+
+            <div className="calendar-grid">
+
+              {/* DAY HEADERS */}
+
+              <div className="days-row">
+
+                {DAYS_HEADER.map(
+                  (dayName, index) => (
+                    <div
+                      key={dayName}
+                      className={
+                        index >= 5
+                          ? index === 6
+                            ? "day-header sunday"
+                            : "day-header saturday"
+                          : "day-header"
+                      }
+                    >
+                      {dayName}
+                    </div>
+                  )
+                )}
+
+              </div>
+
+              {/* DAYS */}
+
+              {buildMonthGrid(
+                activeMonth
+              ).map((row, rowIndex) => (
+
                 <div
-                  key={
-                    dayName
-                  }
-                  style={{
-                    background:
-                      C.card,
-                    textAlign:
-                      "center",
-                    padding:
-                      "7px 3px",
-                    fontSize: 9,
-                    fontWeight: 750,
-                    color:
-                      index >= 5
-                        ? index ===
-                          6
-                          ? C.red
-                          : C.blue
-                        : C.textMuted,
-                    letterSpacing:
-                      ".3px",
-                  }}
-                >
-                  {dayName}
-                </div>
-              )
-            )}
-          </div>
-
-          {/* CALENDAR GRID */}
-
-          <div
-            className="calendar-grid"
-            style={{
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection:
-                "column",
-              gap: 1,
-              background:
-                C.border,
-            }}
-          >
-            {buildMonthGrid(
-              activeMonth
-            ).map(
-              (row, rowIndex) => (
-                <div
-                  key={
-                    rowIndex
-                  }
+                  key={rowIndex}
                   className="calendar-row"
-                  style={{
-                    display:
-                      "grid",
-                    gridTemplateColumns:
-                      "repeat(7, minmax(0, 1fr))",
-                    gap: 1,
-                    background:
-                      C.border,
-                    flex: 1,
-                    minHeight: 0,
-                  }}
                 >
+
                   {row.map(
-                    (
-                      day,
-                      columnIndex
-                    ) => {
+                    (day, columnIndex) => {
+
                       if (!day) {
                         return (
                           <div
-                            key={
-                              columnIndex
-                            }
-                            style={{
-                              background:
-                                "rgba(17,29,58,.38)",
-                              minWidth: 0,
-                              minHeight: 0,
-                            }}
+                            key={columnIndex}
+                            className="empty-cell"
                           />
                         );
                       }
@@ -1777,12 +1198,10 @@ export default function App() {
                       const isSelected =
                         selected?.month ===
                           activeMonth &&
-                        selected?.day ===
-                          day;
+                        selected?.day === day;
 
                       const isWeekend =
-                        columnIndex >=
-                        5;
+                        columnIndex >= 5;
 
                       const typeStyle =
                         event
@@ -1794,180 +1213,83 @@ export default function App() {
 
                       return (
                         <div
-                          key={
-                            columnIndex
-                          }
+                          key={columnIndex}
                           onClick={() =>
-                            selectDate(
-                              day
-                            )
+                            selectDate(day)
                           }
-                          className={`calendar-cell ${
+                          className={
                             isSelected
-                              ? "selected-cell"
-                              : ""
-                          }`}
-                          style={{
-                            minWidth: 0,
-                            minHeight: 0,
-                            padding:
-                              "6px 7px",
-                            background:
-                              isSelected
-                                ? C.cardSelected
-                                : C.card,
-                            cursor:
-                              "pointer",
-                            position:
-                              "relative",
-                            boxSizing:
-                              "border-box",
-                            outline:
-                              isSelected
-                                ? `2px solid ${C.lime}`
-                                : "none",
-                            outlineOffset:
-                              "-2px",
-                            overflow:
-                              "hidden",
-                          }}
+                              ? "calendar-cell selected"
+                              : "calendar-cell"
+                          }
                         >
+
                           {/* DATE */}
 
-                          <div
-                            style={{
-                              display:
-                                "flex",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "space-between",
-                            }}
-                          >
+                          <div className="date-top">
+
                             <span
-                              style={{
-                                fontSize: 13,
-                                fontWeight:
-                                  isSelected
-                                    ? 800
-                                    : 600,
-                                color:
-                                  isSelected
-                                    ? C.lime
-                                    : columnIndex ===
-                                      6
-                                    ? C.red
-                                    : isWeekend
-                                    ? C.blue
-                                    : C.white,
-                              }}
+                              className={
+                                isSelected
+                                  ? "date-number selected-date"
+                                  : columnIndex === 6
+                                  ? "date-number sunday-date"
+                                  : isWeekend
+                                  ? "date-number weekend-date"
+                                  : "date-number"
+                              }
                             >
                               {day}
                             </span>
 
                             {event && (
                               <span
+                                className="event-dot"
                                 style={{
-                                  width: 5,
-                                  height: 5,
-                                  borderRadius:
-                                    "50%",
                                   background:
                                     event.color ||
                                     C.blue,
                                   boxShadow:
-                                    `0 0 7px ${event.color || C.blue}`,
-                                  flexShrink: 0,
+                                    `0 0 8px ${
+                                      event.color ||
+                                      C.blue
+                                    }`,
                                 }}
                               />
                             )}
+
                           </div>
 
                           {/* EVENT */}
 
-                          {event && (
+                          {event ? (
                             <div
-                              className="calendar-event"
+                              className="event-card"
                               style={{
-                                marginTop: 7,
-                                borderRadius:
-                                  6,
-                                padding:
-                                  "5px 6px",
                                 background:
                                   typeStyle.background,
-                                border:
-                                  `1px solid ${typeStyle.color}33`,
-                                overflow:
-                                  "hidden",
+                                borderColor:
+                                  `${typeStyle.color}33`,
                               }}
                             >
+
                               <div
+                                className="event-type"
                                 style={{
                                   color:
                                     typeStyle.color,
-                                  fontSize: 8,
-                                  fontWeight:
-                                    750,
-                                  marginBottom:
-                                    2,
-                                  textTransform:
-                                    "uppercase",
-                                  letterSpacing:
-                                    ".2px",
-                                  whiteSpace:
-                                    "nowrap",
-                                  overflow:
-                                    "hidden",
-                                  textOverflow:
-                                    "ellipsis",
                                 }}
                               >
-                                {
-                                  event.type
-                                }
+                                {event.type}
                               </div>
 
-                              <div
-                                style={{
-                                  color:
-                                    C.white,
-                                  fontSize: 9,
-                                  lineHeight:
-                                    1.25,
-                                  fontWeight:
-                                    600,
-                                  display:
-                                    "-webkit-box",
-                                  WebkitLineClamp:
-                                    2,
-                                  WebkitBoxOrient:
-                                    "vertical",
-                                  overflow:
-                                    "hidden",
-                                  wordBreak:
-                                    "break-word",
-                                }}
-                              >
-                                {
-                                  event.name
-                                }
+                              <div className="event-name">
+                                {event.name}
                               </div>
+
                             </div>
-                          )}
-
-                          {!event && (
-                            <div
-                              style={{
-                                marginTop:
-                                  10,
-                                color:
-                                  C.textDim,
-                                fontSize: 8,
-                                opacity:
-                                  0.35,
-                              }}
-                            >
+                          ) : (
+                            <div className="empty-dash">
                               —
                             </div>
                           )}
@@ -1976,28 +1298,24 @@ export default function App() {
 
                           {event && (
                             <div
+                              className="event-bottom-bar"
                               style={{
-                                position:
-                                  "absolute",
-                                left: 7,
-                                right: 7,
-                                bottom: 3,
-                                height: 2,
-                                borderRadius:
-                                  2,
                                 background:
                                   event.color ||
                                   C.blue,
                               }}
                             />
                           )}
+
                         </div>
                       );
                     }
                   )}
+
                 </div>
-              )
-            )}
+              ))}
+
+            </div>
           </div>
         </section>
 
@@ -2005,467 +1323,227 @@ export default function App() {
             LEGEND
             ================================================= */}
 
-        <div
-          className="legend"
-          style={{
-            display: "flex",
-            alignItems:
-              "center",
-            gap: 12,
-            flexWrap: "wrap",
-            marginTop: 7,
-            padding:
-              "0 3px",
-            color:
-              C.textMuted,
-            fontSize: 9,
-            flexShrink: 0,
-          }}
-        >
-          {[
-            [
-              C.lime,
-              "Official / National",
-            ],
-            [
-              C.green,
-              "Office Event",
-            ],
-            [
-              C.purple,
-              "Meeting",
-            ],
-            [
-              C.orange,
-              "Travel / Outside",
-            ],
-            [
-              C.red,
-              "Important",
-            ],
-            [
-              C.blue,
-              "Custom",
-            ],
-          ].map(
-            ([color, label]) => (
-              <span
-                key={label}
-                style={{
-                  display:
-                    "flex",
-                  alignItems:
-                    "center",
-                  gap: 4,
-                }}
-              >
-                <span
-                  style={{
-                    width: 11,
-                    height: 3,
-                    borderRadius:
-                      2,
-                    background:
-                      color,
-                  }}
-                />
+        <div className="legend">
 
-                {label}
-              </span>
-            )
-          )}
+          {[
+            [C.lime, "Official / National"],
+            [C.green, "Office Event"],
+            [C.purple, "Meeting"],
+            [C.orange, "Travel / Outside"],
+            [C.red, "Important"],
+            [C.blue, "Custom"],
+          ].map(([color, label]) => (
+            <span
+              key={label}
+              className="legend-item"
+            >
+              <span
+                className="legend-line"
+                style={{
+                  background: color,
+                }}
+              />
+              {label}
+            </span>
+          ))}
+
         </div>
 
         {/* =================================================
             DETAIL PANEL
             ================================================= */}
 
-        <section
-          className="detail-panel"
-          style={{
-            marginTop: 8,
-            background:
-              C.card,
-            border:
-              `1px solid ${C.border}`,
-            borderRadius: 11,
-            padding:
-              "11px 15px",
-            minHeight: 75,
-            maxHeight: 155,
-            overflowY: "auto",
-            flexShrink: 0,
-          }}
-        >
+        <section className="detail-panel">
+
           {/* NOTHING SELECTED */}
 
           {!selected ? (
             <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
+              <div className="detail-title">
                 Select a date
               </div>
 
-              <p
-                style={{
-                  margin:
-                    "4px 0 0",
-                  color:
-                    C.textMuted,
-                  fontSize: 10,
-                }}
-              >
-                Click any date above to
-                view events or add office
-                activities.
+              <p className="detail-description">
+                Click any date above to view
+                events or add office activities.
               </p>
             </div>
-          ) : editing ===
-              "add" ||
-            editing ===
-              "edit" ? (
-            /* FORM */
+
+          ) : editing === "add" ||
+            editing === "edit" ? (
+
+            // ─────────────────────
+            // FORM
+            // ─────────────────────
 
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  alignItems:
-                    "center",
-                  gap: 10,
-                  marginBottom:
-                    8,
-                }}
-              >
+
+              <div className="form-header">
+
                 <div>
-                  <div
-                    style={{
-                      color:
-                        C.lime,
-                      fontSize: 9,
-                      fontWeight:
-                        700,
-                    }}
-                  >
-                    {editing ===
-                    "add"
+                  <div className="form-label">
+                    {editing === "add"
                       ? "ADD EVENT"
                       : "EDIT EVENT"}
                   </div>
 
-                  <div
-                    style={{
-                      marginTop:
-                        2,
-                      fontSize: 14,
-                      fontWeight:
-                        750,
-                    }}
-                  >
+                  <div className="form-date">
                     {formatDateForDisplay(
                       selected.month,
                       selected.day
                     )}
                   </div>
                 </div>
+
               </div>
 
-              <div
-                style={{
-                  maxWidth: 700,
-                  display:
-                    "grid",
-                  gridTemplateColumns:
-                    "repeat(2, minmax(0, 1fr))",
-                  gap: 7,
-                }}
-              >
+              <div className="event-form">
+
                 <input
                   placeholder="Event name *"
-                  value={
-                    form.name
-                  }
+                  value={form.name}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      name:
-                        e.target
-                          .value,
+                      name: e.target.value,
                     })
                   }
-                  style={{
-                    ...inputStyle,
-                    gridColumn:
-                      "1 / -1",
-                  }}
+                  className="form-input full"
                 />
 
                 <select
-                  value={
-                    form.type
-                  }
+                  value={form.type}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      type:
-                        e.target
-                          .value,
+                      type: e.target.value,
                     })
                   }
-                  style={
-                    inputStyle
-                  }
+                  className="form-input"
                 >
                   {EVENT_TYPES.map(
                     (type) => (
                       <option
-                        key={
-                          type.value
-                        }
-                        value={
-                          type.value
-                        }
-                        style={{
-                          background:
-                            C.card,
-                        }}
+                        key={type.value}
+                        value={type.value}
                       >
-                        {
-                          type.value
-                        }
+                        {type.value}
                       </option>
                     )
                   )}
                 </select>
 
                 <select
-                  value={
-                    form.holiday
-                  }
+                  value={form.holiday}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      holiday:
-                        e.target
-                          .value,
+                      holiday: e.target.value,
                     })
                   }
-                  style={
-                    inputStyle
-                  }
+                  className="form-input"
                 >
-                  <option
-                    value="Not a Public Holiday"
-                    style={{
-                      background:
-                        C.card,
-                    }}
-                  >
+                  <option>
                     Not a Public Holiday
                   </option>
 
-                  <option
-                    value="Public Holiday"
-                    style={{
-                      background:
-                        C.card,
-                    }}
-                  >
+                  <option>
                     Public Holiday
                   </option>
 
-                  <option
-                    value="National Observance"
-                    style={{
-                      background:
-                        C.card,
-                    }}
-                  >
+                  <option>
                     National Observance
                   </option>
                 </select>
 
                 <textarea
                   placeholder="Description / notes"
-                  value={
-                    form.description
-                  }
+                  value={form.description}
                   onChange={(e) =>
                     setForm({
                       ...form,
                       description:
-                        e.target
-                          .value,
+                        e.target.value,
                     })
                   }
-                  rows={2}
-                  style={{
-                    ...inputStyle,
-                    resize:
-                      "vertical",
-                    gridColumn:
-                      "1 / -1",
-                  }}
+                  rows={4}
+                  className="form-input full textarea"
                 />
 
-                <label
-                  style={{
-                    display:
-                      "flex",
-                    alignItems:
-                      "center",
-                    gap: 7,
-                    fontSize: 10,
-                    color:
-                      C.textMuted,
-                    cursor:
-                      "pointer",
-                  }}
-                >
+                <label className="office-checkbox">
                   <input
                     type="checkbox"
-                    checked={
-                      form.isOffice
-                    }
+                    checked={form.isOffice}
                     onChange={(e) =>
                       setForm({
                         ...form,
                         isOffice:
-                          e.target
-                            .checked,
+                          e.target.checked,
                       })
                     }
                   />
-                  Office event
+
+                  <span>
+                    Office event
+                  </span>
                 </label>
 
-                <div
-                  style={{
-                    display:
-                      "flex",
-                    justifyContent:
-                      "flex-end",
-                    gap: 6,
-                  }}
-                >
+                <div className="form-actions">
+
                   <button
                     onClick={() =>
-                      setEditing(
-                        null
-                      )
+                      setEditing(null)
                     }
-                    style={{
-                      ...buttonBase,
-                      padding:
-                        "7px 12px",
-                      border:
-                        `1px solid ${C.border}`,
-                      background:
-                        "transparent",
-                      color:
-                        C.textMuted,
-                      fontSize: 10,
-                    }}
+                    className="secondary-btn"
                   >
                     Cancel
                   </button>
 
-                  {editing ===
-                    "edit" && (
+                  {editing === "edit" && (
                     <button
-                      onClick={
-                        deleteEvent
-                      }
-                      disabled={
-                        saving
-                      }
-                      style={{
-                        ...buttonBase,
-                        padding:
-                          "7px 12px",
-                        border:
-                          "none",
-                        background:
-                          C.redDim,
-                        color:
-                          C.red,
-                        fontSize: 10,
-                        fontWeight:
-                          700,
-                      }}
+                      onClick={deleteEvent}
+                      disabled={saving}
+                      className="delete-btn"
                     >
                       Delete
                     </button>
                   )}
 
                   <button
-                    onClick={
-                      saveEvent
-                    }
+                    onClick={saveEvent}
                     disabled={
                       !form.name.trim() ||
                       saving
                     }
-                    style={{
-                      ...buttonBase,
-                      padding:
-                        "7px 14px",
-                      border:
-                        "none",
-                      background:
-                        form.name.trim()
-                          ? C.lime
-                          : C.border,
-                      color:
-                        form.name.trim()
-                          ? C.navy
-                          : C.textDim,
-                      fontSize: 10,
-                      fontWeight:
-                        800,
-                    }}
+                    className={
+                      form.name.trim()
+                        ? "primary-btn"
+                        : "disabled-btn"
+                    }
                   >
                     {saving
                       ? "Saving…"
                       : "Save Event"}
                   </button>
+
                 </div>
+
               </div>
             </div>
+
           ) : selectedEvent ? (
-            /* EVENT DETAIL */
+
+            // ─────────────────────
+            // EVENT DETAIL
+            // ─────────────────────
 
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  alignItems:
-                    "flex-start",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    minWidth: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      color:
-                        C.lime,
-                      fontSize: 9,
-                      fontWeight:
-                        700,
-                    }}
-                  >
+
+              <div className="detail-header">
+
+                <div>
+
+                  <div className="detail-date">
                     {formatDateForDisplay(
                       selected.month,
                       selected.day
@@ -2478,97 +1556,44 @@ export default function App() {
                     )}
                   </div>
 
-                  <h3
-                    style={{
-                      margin:
-                        "3px 0 0",
-                      fontSize: 16,
-                      fontWeight:
-                        750,
-                      lineHeight:
-                        1.2,
-                    }}
-                  >
-                    {
-                      selectedEvent.name
-                    }
+                  <h3>
+                    {selectedEvent.name}
                   </h3>
+
                 </div>
 
                 {!selectedEvent.official &&
                   isAdmin && (
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        gap: 5,
-                        flexShrink: 0,
-                      }}
-                    >
+                    <div className="detail-actions">
+
                       <button
                         onClick={() =>
                           openEdit(
                             selectedEvent
                           )
                         }
-                        style={{
-                          ...buttonBase,
-                          padding:
-                            "6px 11px",
-                          background:
-                            "transparent",
-                          border:
-                            `1px solid ${C.border}`,
-                          color:
-                            C.white,
-                          fontSize: 10,
-                          fontWeight:
-                            700,
-                        }}
+                        className="secondary-btn"
                       >
                         Edit
                       </button>
 
                       <button
-                        onClick={
-                          deleteEvent
-                        }
-                        disabled={
-                          saving
-                        }
-                        style={{
-                          ...buttonBase,
-                          padding:
-                            "6px 11px",
-                          background:
-                            C.redDim,
-                          border:
-                            "none",
-                          color:
-                            C.red,
-                          fontSize: 10,
-                          fontWeight:
-                            700,
-                        }}
+                        onClick={deleteEvent}
+                        disabled={saving}
+                        className="delete-btn"
                       >
                         Delete
                       </button>
+
                     </div>
                   )}
+
               </div>
 
               {/* TAGS */}
 
-              <div
-                style={{
-                  display:
-                    "flex",
-                  gap: 5,
-                  flexWrap:
-                    "wrap",
-                  marginTop: 7,
-                }}
-              >
+              <div className="tags">
+
                 {(() => {
                   const style =
                     getTypeStyle(
@@ -2578,144 +1603,60 @@ export default function App() {
 
                   return (
                     <span
+                      className="tag"
                       style={{
                         background:
                           style.background,
                         color:
                           style.color,
-                        padding:
-                          "3px 8px",
-                        borderRadius:
-                          20,
-                        fontSize: 9,
-                        fontWeight:
-                          700,
                       }}
                     >
-                      {
-                        selectedEvent.type
-                      }
+                      {selectedEvent.type}
                     </span>
                   );
                 })()}
 
-                <span
-                  style={{
-                    background:
-                      "rgba(255,255,255,.05)",
-                    color:
-                      C.textMuted,
-                    padding:
-                      "3px 8px",
-                    borderRadius:
-                      20,
-                    fontSize: 9,
-                    fontWeight:
-                      600,
-                  }}
-                >
-                  {
-                    selectedEvent.holiday
-                  }
+                <span className="tag neutral">
+                  {selectedEvent.holiday}
                 </span>
 
                 {selectedEvent.isOffice &&
                   !selectedEvent.official && (
-                    <span
-                      style={{
-                        background:
-                          C.greenDim,
-                        color:
-                          C.green,
-                        padding:
-                          "3px 8px",
-                        borderRadius:
-                          20,
-                        fontSize: 9,
-                        fontWeight:
-                          700,
-                      }}
-                    >
-                      Office
-                      Event
+                    <span className="tag office">
+                      Office Event
                     </span>
                   )}
 
                 {selectedEvent.official && (
-                  <span
-                    style={{
-                      background:
-                        C.limeDim,
-                      color:
-                        C.lime,
-                      padding:
-                        "3px 8px",
-                      borderRadius:
-                        20,
-                      fontSize: 9,
-                      fontWeight:
-                        700,
-                    }}
-                  >
+                  <span className="tag official">
                     Official
                   </span>
                 )}
+
               </div>
 
               {/* DESCRIPTION */}
 
               {selectedEvent.description && (
-                <p
-                  style={{
-                    margin:
-                      "7px 0 0",
-                    color:
-                      C.textMuted,
-                    fontSize: 10,
-                    lineHeight:
-                      1.45,
-                    maxWidth:
-                      850,
-                  }}
-                >
-                  {
-                    selectedEvent.description
-                  }
+                <p className="event-description">
+                  {selectedEvent.description}
                 </p>
               )}
 
-              {/* ADMIN MOVE */}
+              {/* ADMIN TOOLS */}
 
               {!selectedEvent.official &&
                 isAdmin && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      paddingTop:
-                        7,
-                      borderTop:
-                        `1px solid ${C.border}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        alignItems:
-                          "center",
-                        gap: 6,
-                        flexWrap:
-                          "wrap",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color:
-                            C.textMuted,
-                          fontSize: 9,
-                        }}
-                      >
-                        Move event:
+                  <div className="admin-tools">
+
+                    <div className="admin-tools-title">
+                      Admin tools
+                    </div>
+
+                    <div className="move-controls">
+
+                      <span className="move-label">
+                        Move event to:
                       </span>
 
                       <select
@@ -2723,13 +1664,7 @@ export default function App() {
                         defaultValue={
                           selected.month
                         }
-                        style={{
-                          ...inputStyle,
-                          width: 115,
-                          padding:
-                            "5px 7px",
-                          fontSize: 9,
-                        }}
+                        className="move-month"
                       >
                         {MONTHS.map(
                           (month) => (
@@ -2740,10 +1675,6 @@ export default function App() {
                               value={
                                 month.month
                               }
-                              style={{
-                                background:
-                                  C.card,
-                              }}
                             >
                               {
                                 month.name
@@ -2759,13 +1690,7 @@ export default function App() {
                         min="1"
                         max="31"
                         placeholder="Day"
-                        style={{
-                          ...inputStyle,
-                          width: 55,
-                          padding:
-                            "5px 7px",
-                          fontSize: 9,
-                        }}
+                        className="move-day"
                       />
 
                       <button
@@ -2790,40 +1715,26 @@ export default function App() {
                             );
                           }
                         }}
-                        style={{
-                          ...buttonBase,
-                          padding:
-                            "5px 10px",
-                          border:
-                            `1px solid ${C.border}`,
-                          background:
-                            "transparent",
-                          color:
-                            C.white,
-                          fontSize: 9,
-                          fontWeight:
-                            700,
-                        }}
+                        className="secondary-btn"
                       >
                         Move
                       </button>
+
                     </div>
                   </div>
                 )}
+
             </div>
+
           ) : (
-            /* EMPTY DATE */
+
+            // ─────────────────────
+            // EMPTY DATE
+            // ─────────────────────
 
             <div>
-              <div
-                style={{
-                  color:
-                    C.lime,
-                  fontSize: 9,
-                  fontWeight:
-                    700,
-                }}
-              >
+
+              <div className="detail-date">
                 {formatDateForDisplay(
                   selected.month,
                   selected.day
@@ -2836,98 +1747,59 @@ export default function App() {
                 )}
               </div>
 
-              <div
-                style={{
-                  marginTop: 3,
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
+              <div className="no-event-title">
                 No event scheduled
               </div>
 
-              <p
-                style={{
-                  margin:
-                    "3px 0 7px",
-                  color:
-                    C.textMuted,
-                  fontSize: 10,
-                }}
-              >
-                This date is available
-                for an office activity,
-                meeting, travel or custom
-                event.
+              <p className="detail-description">
+                This date is available for an
+                office activity, meeting, travel
+                or custom event.
               </p>
 
               {isAdmin && (
                 <button
-                  onClick={
-                    openAdd
-                  }
-                  style={{
-                    ...buttonBase,
-                    padding:
-                      "6px 12px",
-                    background:
-                      C.lime,
-                    color:
-                      C.navy,
-                    border:
-                      "none",
-                    fontSize: 10,
-                    fontWeight:
-                      800,
-                  }}
+                  onClick={openAdd}
+                  className="primary-btn add-event-btn"
                 >
                   + Add Event
                 </button>
               )}
+
             </div>
           )}
+
         </section>
 
-        {/* FOOTER NOTE */}
+        {/* =================================================
+            FOOTER
+            ================================================= */}
 
-        <div
-          className="footer-note"
-          style={{
-            marginTop: 5,
-            padding:
-              "2px 3px 0",
-            color:
-              C.textDim,
-            fontSize: 8,
-            lineHeight: 1.3,
-            flexShrink: 0,
-            whiteSpace:
-              "nowrap",
-            overflow:
-              "hidden",
-            textOverflow:
-              "ellipsis",
-          }}
-        >
-          <strong
-            style={{
-              color:
-                C.textMuted,
-            }}
-          >
+        <div className="footer-note">
+
+          <strong>
             RB Office Calendar
           </strong>{" "}
-          — Meetings, office activities,
+          — Use the calendar to keep track
+          of meetings, office activities,
           travel, important dates and
-          national events.
+          national events. Admin users can
+          add and manage custom events.
+
         </div>
+
       </main>
 
       {/* =================================================
-          GLOBAL CSS
+          STYLES
           ================================================= */}
 
       <style>{`
+
+        /* =================================================
+           GLOBAL
+           ================================================= */
+
         * {
           box-sizing: border-box;
         }
@@ -2939,22 +1811,11 @@ export default function App() {
           padding: 0;
           width: 100%;
           height: 100%;
-          min-height: 100%;
-          overflow: hidden !important;
           background: ${C.navy};
         }
 
-        html {
-          overflow: hidden !important;
-        }
-
         body {
-          overflow: hidden !important;
-          overscroll-behavior: none;
-        }
-
-        #root {
-          overflow: hidden !important;
+          overflow: hidden;
         }
 
         button,
@@ -2965,11 +1826,18 @@ export default function App() {
         }
 
         button {
-          -webkit-tap-highlight-color: transparent;
+          transition:
+            filter .15s ease,
+            transform .1s ease,
+            background .15s ease;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
           filter: brightness(1.08);
+        }
+
+        button:active:not(:disabled) {
+          transform: translateY(1px);
         }
 
         button:disabled {
@@ -2983,306 +1851,1635 @@ export default function App() {
         }
 
         select option {
-          color: ${C.white};
           background: ${C.card};
+          color: ${C.white};
         }
 
-        textarea {
-          scrollbar-width: thin;
-          scrollbar-color: ${C.border} transparent;
+        /* =================================================
+           APP
+           ================================================= */
+
+        .app-shell {
+          width: 100%;
+          height: 100dvh;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+
+          background:
+            radial-gradient(
+              circle at 50% -10%,
+              rgba(78,153,247,0.08),
+              transparent 38%
+            ),
+            ${C.navy};
+
+          color: ${C.white};
+
+          font-family:
+            Inter,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
         }
+
+        /* =================================================
+           HEADER
+           ================================================= */
+
+        .top-header {
+          width: 100%;
+          flex: 0 0 auto;
+
+          border-bottom:
+            1px solid ${C.border};
+
+          background:
+            rgba(8,17,38,.94);
+
+          backdrop-filter:
+            blur(12px);
+
+          position: relative;
+          z-index: 50;
+        }
+
+        .header-inner {
+          width: 100%;
+          max-width: 1180px;
+          margin: 0 auto;
+
+          padding:
+            14px 22px;
+
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          gap: 18px;
+        }
+
+        .brand {
+          min-width: 0;
+
+          display: flex;
+          align-items: center;
+
+          gap: 13px;
+        }
+
+        .brand-logo {
+          width: 46px;
+          height: 46px;
+          flex: 0 0 46px;
+
+          border-radius: 11px;
+
+          background:
+            linear-gradient(
+              135deg,
+              #16264b,
+              #0e1933
+            );
+
+          border:
+            1px solid ${C.border};
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          box-shadow:
+            0 8px 30px rgba(0,0,0,.2);
+        }
+
+        .brand-copy {
+          min-width: 0;
+        }
+
+        .eyebrow {
+          color: ${C.lime};
+
+          font-size: 9px;
+          font-weight: 800;
+
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+
+          margin-bottom: 3px;
+        }
+
+        .brand h1 {
+          margin: 0;
+
+          font-size: 21px;
+          line-height: 1.1;
+
+          font-weight: 750;
+
+          letter-spacing: -.45px;
+        }
+
+        .brand p {
+          margin: 4px 0 0;
+
+          color: ${C.textMuted};
+
+          font-size: 11px;
+
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* =================================================
+           ADMIN
+           ================================================= */
+
+        .admin-area {
+          position: relative;
+          flex: 0 0 auto;
+        }
+
+        .saving-label {
+          position: absolute;
+
+          right: 0;
+          top: -17px;
+
+          color: ${C.lime};
+
+          font-size: 9px;
+          font-weight: 700;
+        }
+
+        .admin-actions {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .admin-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          padding: 8px 11px;
+
+          border-radius: 8px;
+
+          background:
+            ${C.greenDim};
+
+          border:
+            1px solid rgba(52,211,153,.22);
+
+          color: ${C.green};
+
+          font-size: 10px;
+          font-weight: 750;
+
+          white-space: nowrap;
+        }
+
+        .admin-btn {
+          ${/* intentionally left blank */ ""}
+        }
+
+        .admin-btn,
+        .logout-btn,
+        .primary-btn,
+        .secondary-btn,
+        .delete-btn,
+        .disabled-btn {
+          ${""}
+        }
+
+        .admin-btn {
+          ${""}
+        }
+
+        .admin-btn {
+          padding: 9px 15px;
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 8px;
+
+          background:
+            linear-gradient(
+              135deg,
+              #17264a,
+              #111d3a
+            );
+
+          color: ${C.white};
+
+          font-size: 11px;
+          font-weight: 750;
+
+          cursor: pointer;
+        }
+
+        .logout-btn {
+          padding: 8px 12px;
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 8px;
+
+          background: transparent;
+
+          color: ${C.textMuted};
+
+          font-size: 10px;
+          font-weight: 650;
+
+          cursor: pointer;
+        }
+
+        /* =================================================
+           LOGIN
+           ================================================= */
+
+        .login-panel {
+          position: absolute;
+
+          top: calc(100% + 9px);
+          right: 0;
+
+          width: min(310px, calc(100vw - 24px));
+
+          padding: 16px;
+
+          background: ${C.card};
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 12px;
+
+          box-shadow:
+            0 18px 50px rgba(0,0,0,.45);
+
+          z-index: 100;
+        }
+
+        .login-heading {
+          margin-bottom: 12px;
+        }
+
+        .login-title {
+          font-size: 13px;
+          font-weight: 750;
+        }
+
+        .login-subtitle {
+          margin-top: 3px;
+
+          color: ${C.textMuted};
+
+          font-size: 10px;
+        }
+
+        .form-input {
+          width: 100%;
+
+          min-width: 0;
+
+          background:
+            rgba(255,255,255,.045);
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 8px;
+
+          padding:
+            9px 11px;
+
+          color: ${C.white};
+
+          font-size: 12px;
+
+          outline: none;
+
+          box-sizing: border-box;
+        }
+
+        .login-panel .form-input {
+          margin-bottom: 8px;
+        }
+
+        .form-input:focus {
+          border-color:
+            rgba(200,245,37,.55);
+
+          box-shadow:
+            0 0 0 2px
+            rgba(200,245,37,.06);
+        }
+
+        .login-error {
+          color: ${C.red};
+
+          font-size: 10px;
+
+          margin-bottom: 8px;
+        }
+
+        .login-buttons {
+          display: flex;
+          gap: 7px;
+        }
+
+        .primary-btn {
+          padding:
+            8px 15px;
+
+          border: none;
+
+          border-radius: 8px;
+
+          background:
+            ${C.lime};
+
+          color:
+            ${C.navy};
+
+          font-size: 11px;
+          font-weight: 800;
+
+          cursor: pointer;
+        }
+
+        .secondary-btn {
+          padding:
+            8px 13px;
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 8px;
+
+          background:
+            transparent;
+
+          color:
+            ${C.textMuted};
+
+          font-size: 11px;
+          font-weight: 650;
+
+          cursor: pointer;
+        }
+
+        .delete-btn {
+          padding:
+            8px 13px;
+
+          border: none;
+
+          border-radius: 8px;
+
+          background:
+            ${C.redDim};
+
+          color:
+            ${C.red};
+
+          font-size: 11px;
+          font-weight: 750;
+
+          cursor: pointer;
+        }
+
+        .disabled-btn {
+          padding:
+            8px 15px;
+
+          border: none;
+
+          border-radius: 8px;
+
+          background:
+            ${C.border};
+
+          color:
+            ${C.textDim};
+
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        /* =================================================
+           MAIN
+           ================================================= */
+
+        .main-content {
+          width: 100%;
+          max-width: 1180px;
+
+          margin: 0 auto;
+
+          padding:
+            20px 22px 24px;
+
+          flex: 1 1 auto;
+
+          min-height: 0;
+
+          display: flex;
+          flex-direction: column;
+
+          overflow: hidden;
+        }
+
+        /* =================================================
+           INTRO
+           ================================================= */
+
+        .intro-section {
+          flex: 0 0 auto;
+
+          margin-bottom: 14px;
+
+          display: flex;
+
+          align-items: flex-end;
+          justify-content: space-between;
+
+          gap: 12px;
+        }
+
+        .section-label {
+          color: ${C.textMuted};
+
+          font-size: 9px;
+          font-weight: 650;
+
+          letter-spacing: .45px;
+
+          margin-bottom: 5px;
+        }
+
+        .intro-section h2 {
+          margin: 0;
+
+          font-size: 23px;
+          line-height: 1.1;
+
+          font-weight: 750;
+
+          letter-spacing: -.55px;
+        }
+
+        .intro-section h2 span {
+          color: ${C.lime};
+        }
+
+        .admin-status {
+          color: ${C.green};
+
+          font-size: 10px;
+          font-weight: 650;
+
+          white-space: nowrap;
+        }
+
+        /* =================================================
+           MONTH TABS
+           ================================================= */
+
+        .month-tabs {
+          flex: 0 0 auto;
+
+          background:
+            rgba(17,29,58,.75);
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 10px;
+
+          padding: 4px;
+
+          display: flex;
+
+          gap: 4px;
+
+          margin-bottom: 10px;
+
+          overflow-x: auto;
+
+          scrollbar-width: thin;
+        }
+
+        .month-tab {
+          flex: 1 1 0;
+
+          min-width: 105px;
+
+          padding:
+            8px 12px;
+
+          border:
+            1px solid transparent;
+
+          border-radius: 7px;
+
+          background: transparent;
+
+          color: ${C.textMuted};
+
+          font-size: 10px;
+          font-weight: 750;
+
+          cursor: pointer;
+
+          white-space: nowrap;
+        }
+
+        .month-tab span {
+          opacity: .5;
+          font-weight: 500;
+        }
+
+        .month-tab.active {
+          border-color: ${C.lime};
+
+          background:
+            ${C.limeDim};
+
+          color: ${C.lime};
+        }
+
+        /* =================================================
+           ERROR
+           ================================================= */
+
+        .error-box {
+          flex: 0 0 auto;
+
+          background:
+            ${C.redDim};
+
+          border:
+            1px solid rgba(224,82,101,.25);
+
+          color: ${C.red};
+
+          padding:
+            8px 11px;
+
+          border-radius: 8px;
+
+          font-size: 10px;
+
+          margin-bottom: 8px;
+        }
+
+        /* =================================================
+           CALENDAR
+           ================================================= */
+
+        .calendar-card {
+          flex: 1 1 auto;
+
+          min-height: 0;
+
+          background:
+            rgba(17,29,58,.7);
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 13px;
+
+          overflow: hidden;
+
+          box-shadow:
+            0 20px 60px rgba(0,0,0,.18);
+
+          display: flex;
+          flex-direction: column;
+        }
+
+        .calendar-titlebar {
+          flex: 0 0 auto;
+
+          padding:
+            10px 14px;
+
+          border-bottom:
+            1px solid ${C.border};
+
+          display: flex;
+
+          align-items: center;
+          justify-content: space-between;
+
+          gap: 10px;
+        }
+
+        .calendar-title {
+          font-size: 15px;
+          font-weight: 750;
+        }
+
+        .calendar-subtitle {
+          margin-top: 2px;
+
+          color: ${C.textMuted};
+
+          font-size: 9px;
+        }
+
+        .sync-status {
+          color: ${C.textMuted};
+
+          font-size: 9px;
+
+          white-space: nowrap;
+        }
+
+        .calendar-scroll {
+          flex: 1 1 auto;
+
+          min-height: 0;
+
+          overflow: auto;
+
+          scrollbar-width: thin;
+          scrollbar-color:
+            ${C.border}
+            transparent;
+        }
+
+        .calendar-grid {
+          min-width: 700px;
+
+          width: 100%;
+        }
+
+        .days-row,
+        .calendar-row {
+          display: grid;
+
+          grid-template-columns:
+            repeat(7, minmax(0, 1fr));
+
+          gap: 1px;
+
+          background:
+            ${C.border};
+        }
+
+        .day-header {
+          min-height: 28px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          background: ${C.card};
+
+          color: ${C.textMuted};
+
+          font-size: 9px;
+          font-weight: 750;
+
+          letter-spacing: .3px;
+        }
+
+        .day-header.saturday {
+          color: ${C.blue};
+        }
+
+        .day-header.sunday {
+          color: ${C.red};
+        }
+
+        .calendar-row {
+          border-top:
+            1px solid ${C.border};
+        }
+
+        .calendar-row:first-of-type {
+          border-top: none;
+        }
+
+        .calendar-cell,
+        .empty-cell {
+          min-height: 76px;
+
+          position: relative;
+
+          padding:
+            7px 7px 6px;
+
+          background:
+            ${C.card};
+
+          box-sizing: border-box;
+        }
+
+        .calendar-cell {
+          cursor: pointer;
+
+          transition:
+            background .12s ease;
+        }
+
+        .calendar-cell:hover {
+          background:
+            ${C.cardHover};
+        }
+
+        .calendar-cell.selected {
+          background:
+            ${C.cardSelected};
+
+          outline:
+            2px solid ${C.lime};
+
+          outline-offset:
+            -2px;
+
+          z-index: 2;
+        }
+
+        .empty-cell {
+          background:
+            rgba(17,29,58,.35);
+        }
+
+        .date-top {
+          display: flex;
+
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .date-number {
+          color: ${C.white};
+
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .selected-date {
+          color: ${C.lime};
+
+          font-weight: 800;
+        }
+
+        .weekend-date {
+          color: ${C.blue};
+        }
+
+        .sunday-date {
+          color: ${C.red};
+        }
+
+        .event-dot {
+          width: 5px;
+          height: 5px;
+
+          flex: 0 0 5px;
+
+          border-radius: 50%;
+        }
+
+        .event-card {
+          margin-top: 7px;
+
+          border:
+            1px solid transparent;
+
+          border-radius: 6px;
+
+          padding:
+            5px 6px;
+        }
+
+        .event-type {
+          font-size: 7px;
+          font-weight: 800;
+
+          text-transform: uppercase;
+
+          letter-spacing: .2px;
+
+          margin-bottom: 2px;
+        }
+
+        .event-name {
+          color: ${C.white};
+
+          font-size: 8px;
+          line-height: 1.3;
+
+          font-weight: 650;
+
+          display: -webkit-box;
+
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+
+          overflow: hidden;
+        }
+
+        .empty-dash {
+          margin-top: 13px;
+
+          color: ${C.textDim};
+
+          font-size: 8px;
+
+          opacity: .45;
+        }
+
+        .event-bottom-bar {
+          position: absolute;
+
+          left: 7px;
+          right: 7px;
+          bottom: 4px;
+
+          height: 2px;
+
+          border-radius: 2px;
+        }
+
+        /* =================================================
+           LEGEND
+           ================================================= */
+
+        .legend {
+          flex: 0 0 auto;
+
+          display: flex;
+          align-items: center;
+
+          gap: 12px;
+
+          flex-wrap: wrap;
+
+          margin-top: 7px;
+
+          padding:
+            0 3px;
+
+          color:
+            ${C.textMuted};
+
+          font-size: 8px;
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+
+          gap: 4px;
+
+          white-space: nowrap;
+        }
+
+        .legend-line {
+          width: 11px;
+          height: 2px;
+
+          border-radius: 2px;
+        }
+
+        /* =================================================
+           DETAIL PANEL
+           ================================================= */
 
         .detail-panel {
-          scrollbar-width: thin;
-          scrollbar-color: ${C.border} transparent;
+          flex: 0 0 auto;
+
+          margin-top: 10px;
+
+          background:
+            ${C.card};
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 11px;
+
+          padding:
+            14px 16px;
+
+          max-height: 260px;
+
+          overflow: auto;
         }
 
-        /* Desktop / laptop */
-
-        @media (min-width: 721px) {
-          .calendar-cell:hover {
-            background: ${C.cardHover} !important;
-          }
+        .detail-title {
+          font-size: 12px;
+          font-weight: 700;
         }
 
-        /* Medium screens */
+        .detail-date,
+        .form-label {
+          color: ${C.lime};
 
-        @media (max-height: 760px) {
-          .app-header {
-            height: 68px !important;
+          font-size: 9px;
+          font-weight: 750;
+        }
+
+        .detail-description {
+          margin:
+            5px 0 0;
+
+          color:
+            ${C.textMuted};
+
+          font-size: 10px;
+          line-height: 1.5;
+        }
+
+        .detail-header {
+          display: flex;
+
+          align-items: flex-start;
+          justify-content: space-between;
+
+          gap: 10px;
+        }
+
+        .detail-header h3 {
+          margin:
+            3px 0 0;
+
+          font-size: 16px;
+          font-weight: 750;
+        }
+
+        .detail-actions {
+          display: flex;
+
+          gap: 6px;
+
+          flex-wrap: wrap;
+        }
+
+        .tags {
+          display: flex;
+
+          gap: 5px;
+
+          flex-wrap: wrap;
+
+          margin-top: 8px;
+        }
+
+        .tag {
+          padding:
+            3px 8px;
+
+          border-radius: 20px;
+
+          font-size: 8px;
+          font-weight: 700;
+        }
+
+        .tag.neutral {
+          background:
+            rgba(255,255,255,.05);
+
+          color:
+            ${C.textMuted};
+        }
+
+        .tag.office {
+          background:
+            ${C.greenDim};
+
+          color:
+            ${C.green};
+        }
+
+        .tag.official {
+          background:
+            ${C.limeDim};
+
+          color:
+            ${C.lime};
+        }
+
+        .event-description {
+          margin:
+            9px 0 0;
+
+          color:
+            ${C.textMuted};
+
+          font-size: 10px;
+
+          line-height: 1.55;
+
+          max-width: 800px;
+        }
+
+        .admin-tools {
+          margin-top: 10px;
+
+          padding-top: 9px;
+
+          border-top:
+            1px solid ${C.border};
+        }
+
+        .admin-tools-title {
+          color:
+            ${C.textDim};
+
+          font-size: 8px;
+
+          font-weight: 750;
+
+          text-transform: uppercase;
+
+          letter-spacing: .5px;
+
+          margin-bottom: 6px;
+        }
+
+        .move-controls {
+          display: flex;
+
+          align-items: center;
+
+          gap: 6px;
+
+          flex-wrap: wrap;
+        }
+
+        .move-label {
+          color:
+            ${C.textMuted};
+
+          font-size: 9px;
+        }
+
+        .move-month,
+        .move-day {
+          height: 29px;
+
+          background:
+            rgba(255,255,255,.045);
+
+          border:
+            1px solid ${C.border};
+
+          border-radius: 7px;
+
+          color:
+            ${C.white};
+
+          padding:
+            0 8px;
+
+          font-size: 9px;
+
+          outline: none;
+        }
+
+        .move-month {
+          width: 120px;
+        }
+
+        .move-day {
+          width: 62px;
+        }
+
+        /* =================================================
+           EVENT FORM
+           ================================================= */
+
+        .form-header {
+          margin-bottom: 10px;
+        }
+
+        .form-date {
+          margin-top: 3px;
+
+          font-size: 14px;
+
+          font-weight: 750;
+        }
+
+        .event-form {
+          max-width: 720px;
+
+          display: grid;
+
+          grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+          gap: 8px;
+        }
+
+        .event-form .full {
+          grid-column:
+            1 / -1;
+        }
+
+        .textarea {
+          resize: vertical;
+          min-height: 75px;
+        }
+
+        .office-checkbox {
+          display: flex;
+
+          align-items: center;
+
+          gap: 7px;
+
+          color:
+            ${C.textMuted};
+
+          font-size: 10px;
+
+          cursor: pointer;
+        }
+
+        .office-checkbox input {
+          accent-color:
+            ${C.lime};
+        }
+
+        .form-actions {
+          display: flex;
+
+          justify-content: flex-end;
+
+          align-items: center;
+
+          gap: 6px;
+
+          flex-wrap: wrap;
+        }
+
+        .no-event-title {
+          margin-top: 3px;
+
+          font-size: 14px;
+
+          font-weight: 700;
+        }
+
+        .add-event-btn {
+          margin-top: 9px;
+        }
+
+        /* =================================================
+           FOOTER
+           ================================================= */
+
+        .footer-note {
+          flex: 0 0 auto;
+
+          margin-top: 8px;
+
+          padding:
+            0 3px;
+
+          color:
+            ${C.textDim};
+
+          font-size: 8px;
+
+          line-height: 1.5;
+        }
+
+        .footer-note strong {
+          color:
+            ${C.textMuted};
+        }
+
+        /* =================================================
+           TABLET
+           ================================================= */
+
+        @media (max-width: 850px) {
+
+          .main-content {
+            padding-left: 14px;
+            padding-right: 14px;
           }
 
-          .main-area {
-            height: calc(100vh - 68px) !important;
-            padding-top: 9px !important;
-            padding-bottom: 7px !important;
+          .header-inner {
+            padding-left: 14px;
+            padding-right: 14px;
           }
 
-          .intro-section {
-            margin-bottom: 7px !important;
+          .brand h1 {
+            font-size: 19px;
           }
 
-          .intro-section h2 {
-            font-size: 19px !important;
+          .brand p {
+            max-width: 400px;
           }
 
-          .month-tabs {
-            margin-bottom: 7px !important;
+          .calendar-grid {
+            min-width: 650px;
           }
 
-          .calendar-title {
-            padding-top: 7px !important;
-            padding-bottom: 7px !important;
-          }
-
-          .day-headers > div {
-            padding-top: 5px !important;
-            padding-bottom: 5px !important;
+          .calendar-cell,
+          .empty-cell {
+            min-height: 70px;
           }
 
           .detail-panel {
-            max-height: 125px !important;
-            padding: 9px 13px !important;
-          }
-
-          .legend {
-            margin-top: 5px !important;
-          }
-
-          .footer-note {
-            display: none !important;
+            max-height: 245px;
           }
         }
 
-        /* Mobile */
+        /* =================================================
+           MOBILE
+           ================================================= */
 
-        @media (max-width: 720px) {
-          .app-header {
-            height: 64px !important;
+        @media (max-width: 650px) {
+
+          html,
+          body,
+          #root {
+            height: 100%;
           }
 
-          .main-area {
-            height: calc(100vh - 64px) !important;
-            padding: 8px !important;
+          .app-shell {
+            height: 100dvh;
+          }
+
+          .top-header {
+            z-index: 100;
+          }
+
+          .header-inner {
+            padding:
+              10px 10px;
+
+            align-items: flex-start;
+
+            gap: 8px;
+          }
+
+          .brand {
+            gap: 9px;
+
+            min-width: 0;
+
+            flex: 1 1 auto;
           }
 
           .brand-logo {
-            width: 39px !important;
-            height: 39px !important;
+            width: 39px;
+            height: 39px;
+            flex-basis: 39px;
+
+            border-radius: 9px;
           }
 
-          .header-description {
-            display: none !important;
+          .brand-logo svg {
+            width: 31px;
+            height: 31px;
           }
 
-          .app-header h1 {
-            font-size: 17px !important;
+          .eyebrow {
+            font-size: 7px;
+            letter-spacing: 1px;
+
+            margin-bottom: 2px;
           }
 
-          .app-header > div {
-            padding-left: 10px !important;
-            padding-right: 10px !important;
+          .brand h1 {
+            font-size: 16px;
+
+            letter-spacing: -.3px;
           }
 
-          .intro-section {
-            margin-bottom: 7px !important;
+          .brand p {
+            display: none;
           }
 
-          .intro-section h2 {
-            font-size: 18px !important;
+          .admin-area {
+            flex: 0 0 auto;
           }
 
-          .intro-section > div > div:last-child {
-            display: none !important;
+          .admin-btn {
+            padding:
+              7px 10px;
+
+            font-size: 9px;
           }
 
-          .month-tabs {
-            margin-bottom: 7px !important;
+          .admin-actions {
+            gap: 5px;
           }
 
-          .month-tabs button {
-            min-width: 90px !important;
-            padding: 7px 8px !important;
-            font-size: 10px !important;
+          .admin-badge {
+            padding:
+              6px 7px;
+
+            font-size: 8px;
           }
 
-          .calendar-section {
-            border-radius: 10px !important;
-          }
+          .logout-btn {
+            padding:
+              6px 8px;
 
-          .calendar-title {
-            padding: 8px 10px !important;
-          }
-
-          .calendar-title > div:first-child > div:first-child {
-            font-size: 13px !important;
-          }
-
-          .calendar-title > div:first-child > div:last-child {
-            font-size: 8px !important;
-          }
-
-          .day-headers > div {
-            padding: 5px 2px !important;
-            font-size: 8px !important;
-          }
-
-          .calendar-cell {
-            padding: 4px !important;
-          }
-
-          .calendar-cell > div:first-child span:first-child {
-            font-size: 11px !important;
-          }
-
-          .calendar-event {
-            margin-top: 4px !important;
-            padding: 3px 4px !important;
-          }
-
-          .calendar-event > div:first-child {
-            font-size: 6px !important;
-          }
-
-          .calendar-event > div:last-child {
-            font-size: 7px !important;
-          }
-
-          .legend {
-            gap: 7px !important;
-            font-size: 7px !important;
-          }
-
-          .legend span > span {
-            width: 8px !important;
-          }
-
-          .detail-panel {
-            margin-top: 6px !important;
-            padding: 9px 10px !important;
-            max-height: 130px !important;
-            border-radius: 9px !important;
-          }
-
-          .footer-note {
-            display: none !important;
+            font-size: 8px;
           }
 
           .login-panel {
-            right: -5px !important;
-            width: min(300px, calc(100vw - 20px)) !important;
-          }
-        }
+            position: fixed;
 
-        /* Very small mobile */
+            top: 58px;
 
-        @media (max-width: 480px) {
-          .app-header {
-            height: 58px !important;
-          }
+            right: 8px;
+            left: 8px;
 
-          .main-area {
-            height: calc(100vh - 58px) !important;
-            padding: 6px !important;
-          }
+            width: auto;
 
-          .brand-logo {
-            width: 35px !important;
-            height: 35px !important;
+            max-width: none;
+
+            padding: 14px;
+
+            z-index: 200;
           }
 
-          .app-header h1 {
-            font-size: 15px !important;
-          }
+          .main-content {
+            padding:
+              12px 8px 10px;
 
-          .app-header div {
-            gap: 7px !important;
-          }
-
-          .app-header button {
-            padding: 6px 9px !important;
-            font-size: 9px !important;
-          }
-
-          .intro-section h2 {
-            font-size: 16px !important;
+            min-height: 0;
           }
 
           .intro-section {
-            margin-bottom: 5px !important;
+            margin-bottom: 9px;
+
+            align-items: center;
+          }
+
+          .section-label {
+            font-size: 7px;
+
+            margin-bottom: 3px;
+          }
+
+          .intro-section h2 {
+            font-size: 17px;
+          }
+
+          .admin-status {
+            font-size: 8px;
           }
 
           .month-tabs {
-            padding: 3px !important;
-            gap: 3px !important;
+            margin-bottom: 7px;
+
+            padding: 3px;
+
+            border-radius: 8px;
           }
 
-          .month-tabs button {
-            min-width: 75px !important;
-            padding: 6px 5px !important;
-            font-size: 9px !important;
+          .month-tab {
+            min-width: 90px;
+
+            padding:
+              7px 9px;
+
+            font-size: 9px;
+          }
+
+          .error-box {
+            font-size: 9px;
+
+            padding:
+              7px 9px;
+
+            margin-bottom: 6px;
+          }
+
+          .calendar-card {
+            border-radius: 10px;
+          }
+
+          .calendar-titlebar {
+            padding:
+              8px 10px;
           }
 
           .calendar-title {
-            padding: 6px 8px !important;
+            font-size: 13px;
           }
 
-          .calendar-title > div:first-child > div:first-child {
-            font-size: 12px !important;
+          .calendar-subtitle {
+            font-size: 8px;
           }
 
-          .day-headers > div {
-            font-size: 7px !important;
-            padding: 4px 1px !important;
+          .sync-status {
+            font-size: 8px;
           }
 
-          .calendar-cell {
-            padding: 3px !important;
+          .calendar-grid {
+            min-width: 560px;
           }
 
-          .calendar-cell > div:first-child span:first-child {
-            font-size: 10px !important;
+          .day-header {
+            min-height: 25px;
+
+            font-size: 8px;
           }
 
-          .calendar-event {
-            margin-top: 3px !important;
-            padding: 2px 3px !important;
+          .calendar-cell,
+          .empty-cell {
+            min-height: 64px;
+
+            padding:
+              6px 5px;
           }
 
-          .calendar-event > div:first-child {
-            font-size: 5px !important;
-            margin-bottom: 1px !important;
+          .date-number {
+            font-size: 10px;
           }
 
-          .calendar-event > div:last-child {
-            font-size: 6px !important;
+          .event-dot {
+            width: 4px;
+            height: 4px;
+            flex-basis: 4px;
           }
 
-          .detail-panel {
-            max-height: 115px !important;
-            padding: 7px 8px !important;
+          .event-card {
+            margin-top: 5px;
+
+            padding:
+              4px 4px;
+
+            border-radius: 5px;
+          }
+
+          .event-type {
+            font-size: 6px;
+          }
+
+          .event-name {
+            font-size: 7px;
+          }
+
+          .event-bottom-bar {
+            left: 5px;
+            right: 5px;
+            bottom: 3px;
           }
 
           .legend {
-            display: none !important;
+            gap: 8px;
+
+            margin-top: 6px;
+
+            font-size: 7px;
+          }
+
+          .legend-line {
+            width: 9px;
+          }
+
+          .detail-panel {
+            margin-top: 7px;
+
+            padding:
+              11px 11px;
+
+            border-radius: 9px;
+
+            max-height: 210px;
+          }
+
+          .detail-header h3 {
+            font-size: 14px;
+          }
+
+          .detail-date,
+          .form-label {
+            font-size: 8px;
+          }
+
+          .detail-description,
+          .event-description {
+            font-size: 9px;
+          }
+
+          .event-form {
+            grid-template-columns:
+              1fr;
+
+            gap: 7px;
+          }
+
+          .event-form .full {
+            grid-column:
+              auto;
+          }
+
+          .form-actions {
+            justify-content:
+              flex-start;
+          }
+
+          .move-controls {
+            align-items:
+              stretch;
+          }
+
+          .move-label {
+            width: 100%;
+          }
+
+          .move-month {
+            flex: 1 1 140px;
+            width: auto;
+          }
+
+          .move-day {
+            flex: 0 0 65px;
+          }
+
+          .footer-note {
+            display: none;
           }
         }
 
-        /* Form responsive */
+        /* =================================================
+           SMALL MOBILE
+           ================================================= */
 
-        @media (max-width: 600px) {
-          .detail-panel textarea {
-            min-height: 45px;
+        @media (max-width: 420px) {
+
+          .brand h1 {
+            font-size: 14px;
           }
 
-          .detail-panel [style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
+          .admin-badge {
+            display: none;
           }
 
-          .detail-panel [style*="grid-column"] {
-            grid-column: 1 !important;
+          .admin-btn {
+            font-size: 8px;
+
+            padding:
+              7px 8px;
+          }
+
+          .logout-btn {
+            font-size: 8px;
+          }
+
+          .intro-section h2 {
+            font-size: 15px;
+          }
+
+          .admin-status {
+            display: none;
+          }
+
+          .calendar-grid {
+            min-width: 520px;
+          }
+
+          .calendar-cell,
+          .empty-cell {
+            min-height: 60px;
+          }
+
+          .event-name {
+            -webkit-line-clamp: 1;
+          }
+
+          .detail-actions {
+            width: 100%;
+          }
+
+          .detail-actions button {
+            flex: 1;
+          }
+
+          .form-actions button {
+            flex: 1;
           }
         }
+
       `}</style>
     </div>
   );
