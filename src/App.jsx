@@ -1660,12 +1660,14 @@ export default function App() {
         }
 
         html {
-          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
         body {
-          overflow: hidden;
-          overscroll-behavior: none;
+          overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior: auto;
         }
 
         button,
@@ -1695,9 +1697,9 @@ export default function App() {
 
         .app {
           width: 100%;
-          height: 100dvh;
           min-height: 100dvh;
-          overflow: hidden;
+          height: auto;
+          overflow: visible;
           background:
             radial-gradient(
               circle at 50% -10%,
@@ -1920,10 +1922,11 @@ export default function App() {
         .main {
           width: 100%;
           max-width: 1180px;
-          height: calc(100dvh - 74px);
+          min-height: calc(100dvh - 74px);
+          height: auto;
           margin: 0 auto;
-          padding: 15px 20px 14px;
-          overflow: hidden;
+          padding: 15px 20px 20px;
+          overflow: visible;
           display: flex;
           flex-direction: column;
         }
@@ -2222,9 +2225,10 @@ export default function App() {
         }
 
         .detail-panel {
-          flex: 1;
-          min-height: 0;
-          overflow: hidden;
+          width: 100%;
+          flex: none;
+          min-height: 110px;
+          overflow: visible;
           background: ${C.card};
           border: 1px solid ${C.border};
           border-radius: 10px;
@@ -2503,8 +2507,9 @@ export default function App() {
           }
 
           .main {
-            height: calc(100dvh - 68px);
-            padding: 10px 12px;
+            min-height: calc(100dvh - 68px);
+            height: auto;
+            padding: 10px 12px 14px;
           }
 
           .brand p {
@@ -2549,14 +2554,16 @@ export default function App() {
           #root {
             width: 100%;
             max-width: 100%;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
           }
 
           .app {
             width: 100%;
             max-width: 100%;
-            height: 100dvh;
-            overflow: hidden;
+            min-height: 100dvh;
+            height: auto;
+            overflow: visible;
           }
 
           .header {
@@ -2631,9 +2638,10 @@ export default function App() {
           .main {
             width: 100%;
             max-width: 100%;
-            height: calc(100dvh - 61px);
-            padding: 7px 7px 8px;
-            overflow: hidden;
+            min-height: calc(100dvh - 61px);
+            height: auto;
+            padding: 7px 7px 14px;
+            overflow: visible;
           }
 
           .intro {
