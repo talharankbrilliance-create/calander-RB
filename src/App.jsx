@@ -2,16 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 /* =========================================================
    RB OFFICE CALENDAR — SEPTEMBER TO DECEMBER 2026
-   =========================================================
-   Features:
-   - September, October, November, December 2026
-   - Dynamic calendar dates
-   - Supabase events
-   - Admin login
-   - Add / Edit / Delete / Move events
-   - Office / Meeting / Travel / Important / Custom events
-   - Pakistan national/official events
-   - Responsive full-width layout
+   FULL SCREEN / NO PAGE SCROLL VERSION
    ========================================================= */
 
 // ─────────────────────────────────────────────
@@ -228,14 +219,25 @@ function getDaysInMonth(year, month) {
 }
 
 function getMondayBasedOffset(year, month) {
-  const firstDay = new Date(year, month - 1, 1).getDay();
+  const firstDay = new Date(
+    year,
+    month - 1,
+    1
+  ).getDay();
 
   return firstDay === 0 ? 6 : firstDay - 1;
 }
 
 function buildMonthGrid(month) {
-  const daysInMonth = getDaysInMonth(YEAR, month);
-  const offset = getMondayBasedOffset(YEAR, month);
+  const daysInMonth = getDaysInMonth(
+    YEAR,
+    month
+  );
+
+  const offset = getMondayBasedOffset(
+    YEAR,
+    month
+  );
 
   const cells = [];
 
@@ -243,7 +245,11 @@ function buildMonthGrid(month) {
     cells.push(null);
   }
 
-  for (let day = 1; day <= daysInMonth; day++) {
+  for (
+    let day = 1;
+    day <= daysInMonth;
+    day++
+  ) {
     cells.push(day);
   }
 
@@ -253,7 +259,11 @@ function buildMonthGrid(month) {
 
   const rows = [];
 
-  for (let i = 0; i < cells.length; i += 7) {
+  for (
+    let i = 0;
+    i < cells.length;
+    i += 7
+  ) {
     rows.push(cells.slice(i, i + 7));
   }
 
@@ -261,15 +271,27 @@ function buildMonthGrid(month) {
 }
 
 function getDayName(year, month, day) {
-  const date = new Date(year, month - 1, day);
+  const date = new Date(
+    year,
+    month - 1,
+    day
+  );
+
   const jsDay = date.getDay();
 
-  return DAYS_HEADER[jsDay === 0 ? 6 : jsDay - 1];
+  return DAYS_HEADER[
+    jsDay === 0 ? 6 : jsDay - 1
+  ];
 }
 
-function formatDateForDisplay(month, day) {
+function formatDateForDisplay(
+  month,
+  day
+) {
   const monthName =
-    MONTHS.find((m) => m.month === month)?.name || "";
+    MONTHS.find(
+      (m) => m.month === month
+    )?.name || "";
 
   return `${day} ${monthName} ${YEAR}`;
 }
@@ -283,16 +305,23 @@ function rowToEvent(row) {
     id: row.id,
     date: row.event_date,
     name: row.event_name,
-    type: row.event_type || "Custom Event",
+    type:
+      row.event_type ||
+      "Custom Event",
     holiday: row.is_public_holiday
       ? "Public Holiday"
       : "Not a Public Holiday",
-    description: row.description || "",
+    description:
+      row.description || "",
     official: false,
-    isOffice: Boolean(row.is_office_event),
+    isOffice: Boolean(
+      row.is_office_event
+    ),
     color: row.is_office_event
       ? C.green
-      : getTypeStyle(row.event_type).color,
+      : getTypeStyle(
+          row.event_type
+        ).color,
   };
 }
 
@@ -301,12 +330,13 @@ function rowToEvent(row) {
 // ─────────────────────────────────────────────
 
 const inputStyle = {
-  background: "rgba(255,255,255,0.045)",
+  background:
+    "rgba(255,255,255,0.045)",
   border: `1px solid ${C.border}`,
   borderRadius: 8,
-  padding: "10px 12px",
+  padding: "9px 11px",
   color: C.white,
-  fontSize: 13,
+  fontSize: 12,
   outline: "none",
   width: "100%",
   boxSizing: "border-box",
@@ -324,18 +354,26 @@ const buttonBase = {
 // =========================================================
 
 export default function App() {
-  const [activeMonth, setActiveMonth] = useState(9);
+  const [activeMonth, setActiveMonth] =
+    useState(9);
 
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] =
+    useState(null);
 
-  const [dbEvents, setDbEvents] = useState({});
+  const [dbEvents, setDbEvents] =
+    useState({});
 
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(null);
+  const [loaded, setLoaded] =
+    useState(false);
 
-  const [editing, setEditing] = useState(null);
+  const [error, setError] =
+    useState(null);
 
-  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] =
+    useState(null);
+
+  const [saving, setSaving] =
+    useState(false);
 
   // ─────────────────────────────────────────────
   // FORM
@@ -349,68 +387,86 @@ export default function App() {
     isOffice: true,
   };
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] =
+    useState(emptyForm);
 
   // ─────────────────────────────────────────────
   // AUTH
   // ─────────────────────────────────────────────
 
-  const [session, setSession] = useState(null);
+  const [session, setSession] =
+    useState(null);
 
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] =
+    useState(false);
 
-  const [loginForm, setLoginForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [loginForm, setLoginForm] =
+    useState({
+      email: "",
+      password: "",
+    });
 
-  const [loginError, setLoginError] = useState(null);
-  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] =
+    useState(null);
 
-  const isAdmin = Boolean(session?.access_token);
+  const [loginLoading, setLoginLoading] =
+    useState(false);
+
+  const isAdmin = Boolean(
+    session?.access_token
+  );
 
   // ─────────────────────────────────────────────
   // CURRENT MONTH
   // ─────────────────────────────────────────────
 
   const currentMonth =
-    MONTHS.find((item) => item.month === activeMonth) ||
-    MONTHS[0];
+    MONTHS.find(
+      (item) =>
+        item.month === activeMonth
+    ) || MONTHS[0];
 
   // ─────────────────────────────────────────────
   // FETCH EVENTS
   // ─────────────────────────────────────────────
 
-  const fetchEvents = useCallback(async () => {
-    try {
-      const rows = await sbFetch(
-        `/rest/v1/events?select=*&event_date=gte.${YEAR}-09-01&event_date=lte.${YEAR}-12-31&order=event_date.asc`,
-        {
-          method: "GET",
-        },
-        session?.access_token
-      );
+  const fetchEvents =
+    useCallback(async () => {
+      try {
+        const rows = await sbFetch(
+          `/rest/v1/events?select=*&event_date=gte.${YEAR}-09-01&event_date=lte.${YEAR}-12-31&order=event_date.asc`,
+          {
+            method: "GET",
+          },
+          session?.access_token
+        );
 
-      const map = {};
+        const map = {};
 
-      (rows || []).forEach((row) => {
-        if (row.event_date) {
-          map[row.event_date] = rowToEvent(row);
-        }
-      });
+        (rows || []).forEach(
+          (row) => {
+            if (row.event_date) {
+              map[row.event_date] =
+                rowToEvent(row);
+            }
+          }
+        );
 
-      setDbEvents(map);
-      setError(null);
-    } catch (e) {
-      console.error("Fetch events failed:", e);
+        setDbEvents(map);
+        setError(null);
+      } catch (e) {
+        console.error(
+          "Fetch events failed:",
+          e
+        );
 
-      setError(
-        "Could not load events from database."
-      );
-    }
+        setError(
+          "Could not load events from database."
+        );
+      }
 
-    setLoaded(true);
-  }, [session]);
+      setLoaded(true);
+    }, [session]);
 
   useEffect(() => {
     fetchEvents();
@@ -420,8 +476,15 @@ export default function App() {
   // GET EVENT
   // ─────────────────────────────────────────────
 
-  const getEvent = (month, day) => {
-    const key = dateKey(YEAR, month, day);
+  const getEvent = (
+    month,
+    day
+  ) => {
+    const key = dateKey(
+      YEAR,
+      month,
+      day
+    );
 
     return (
       OFFICIAL_EVENTS[key] ||
@@ -478,15 +541,18 @@ export default function App() {
         {
           method: "POST",
           body: JSON.stringify({
-            email: loginForm.email,
-            password: loginForm.password,
+            email:
+              loginForm.email,
+            password:
+              loginForm.password,
           }),
         }
       );
 
       if (data?.access_token) {
         setSession({
-          access_token: data.access_token,
+          access_token:
+            data.access_token,
           user: data.user,
         });
 
@@ -502,7 +568,10 @@ export default function App() {
         );
       }
     } catch (e) {
-      console.error("Login failed:", e);
+      console.error(
+        "Login failed:",
+        e
+      );
 
       setLoginError(
         "Login failed. Check your credentials."
@@ -528,7 +597,8 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const openAdd = () => {
-    if (!isAdmin || !selected) return;
+    if (!isAdmin || !selected)
+      return;
 
     const selectedKey = dateKey(
       YEAR,
@@ -536,7 +606,11 @@ export default function App() {
       selected.day
     );
 
-    if (OFFICIAL_EVENTS[selectedKey]) {
+    if (
+      OFFICIAL_EVENTS[
+        selectedKey
+      ]
+    ) {
       setError(
         "This is an official event and cannot be edited."
       );
@@ -556,18 +630,27 @@ export default function App() {
   // ─────────────────────────────────────────────
 
   const openEdit = (event) => {
-    if (!isAdmin || !event || event.official) {
+    if (
+      !isAdmin ||
+      !event ||
+      event.official
+    ) {
       return;
     }
 
     setForm({
       name: event.name,
-      type: event.type || "Custom Event",
+      type:
+        event.type ||
+        "Custom Event",
       holiday:
         event.holiday ||
         "Not a Public Holiday",
-      description: event.description || "",
-      isOffice: Boolean(event.isOffice),
+      description:
+        event.description || "",
+      isOffice: Boolean(
+        event.isOffice
+      ),
     });
 
     setEditing("edit");
@@ -602,24 +685,26 @@ export default function App() {
 
       const body = {
         event_date: key,
-        event_name: form.name.trim(),
+        event_name:
+          form.name.trim(),
         event_type:
-          form.type.trim() || "Custom Event",
-
+          form.type.trim() ||
+          "Custom Event",
         is_public_holiday:
           holidayText.includes(
             "public holiday"
           ) &&
-          !holidayText.includes("not"),
-
+          !holidayText.includes(
+            "not"
+          ),
         description:
           form.description.trim(),
-
         is_office_event:
           form.isOffice,
       };
 
-      const existing = dbEvents[key];
+      const existing =
+        dbEvents[key];
 
       if (
         editing === "edit" &&
@@ -629,7 +714,9 @@ export default function App() {
           `/rest/v1/events?id=eq.${existing.id}`,
           {
             method: "PATCH",
-            body: JSON.stringify(body),
+            body: JSON.stringify(
+              body
+            ),
           },
           session.access_token
         );
@@ -638,7 +725,9 @@ export default function App() {
           "/rest/v1/events",
           {
             method: "POST",
-            body: JSON.stringify(body),
+            body: JSON.stringify(
+              body
+            ),
           },
           session.access_token
         );
@@ -648,7 +737,10 @@ export default function App() {
 
       await fetchEvents();
     } catch (e) {
-      console.error("Save failed:", e);
+      console.error(
+        "Save failed:",
+        e
+      );
 
       setError(
         `Save failed: ${e.message}`
@@ -676,13 +768,15 @@ export default function App() {
       selected.day
     );
 
-    const event = dbEvents[key];
+    const event =
+      dbEvents[key];
 
     if (!event) return;
 
-    const confirmed = window.confirm(
-      `Delete "${event.name}"?`
-    );
+    const confirmed =
+      window.confirm(
+        `Delete "${event.name}"?`
+      );
 
     if (!confirmed) return;
 
@@ -702,7 +796,10 @@ export default function App() {
 
       await fetchEvents();
     } catch (e) {
-      console.error("Delete failed:", e);
+      console.error(
+        "Delete failed:",
+        e
+      );
 
       setError(
         `Delete failed: ${e.message}`
@@ -733,23 +830,22 @@ export default function App() {
       selected.day
     );
 
-    const event = dbEvents[oldKey];
+    const event =
+      dbEvents[oldKey];
 
     if (!event) return;
 
-    const dayNumber = parseInt(
-      newDay,
-      10
-    );
+    const dayNumber =
+      parseInt(newDay, 10);
 
-    const monthNumber = parseInt(
-      newMonth,
-      10
-    );
+    const monthNumber =
+      parseInt(newMonth, 10);
 
     if (
       !MONTHS.some(
-        (m) => m.month === monthNumber
+        (m) =>
+          m.month ===
+          monthNumber
       )
     ) {
       return;
@@ -776,7 +872,9 @@ export default function App() {
     );
 
     if (
-      OFFICIAL_EVENTS[newKey] ||
+      OFFICIAL_EVENTS[
+        newKey
+      ] ||
       dbEvents[newKey]
     ) {
       setError(
@@ -794,13 +892,16 @@ export default function App() {
         {
           method: "PATCH",
           body: JSON.stringify({
-            event_date: newKey,
+            event_date:
+              newKey,
           }),
         },
         session.access_token
       );
 
-      setActiveMonth(monthNumber);
+      setActiveMonth(
+        monthNumber
+      );
 
       setSelected({
         month: monthNumber,
@@ -809,7 +910,10 @@ export default function App() {
 
       await fetchEvents();
     } catch (e) {
-      console.error("Move failed:", e);
+      console.error(
+        "Move failed:",
+        e
+      );
 
       setError(
         `Move failed: ${e.message}`
@@ -823,20 +927,13 @@ export default function App() {
   // SELECTED EVENT
   // ─────────────────────────────────────────────
 
-  const selectedEvent = selected
-    ? getEvent(
-        selected.month,
-        selected.day
-      )
-    : null;
-
-  const selectedKey = selected
-    ? dateKey(
-        YEAR,
-        selected.month,
-        selected.day
-      )
-    : null;
+  const selectedEvent =
+    selected
+      ? getEvent(
+          selected.month,
+          selected.day
+        )
+      : null;
 
   // ─────────────────────────────────────────────
   // RENDER
@@ -844,9 +941,11 @@ export default function App() {
 
   return (
     <div
+      className="app-shell"
       style={{
-        minHeight: "100vh",
         width: "100%",
+        height: "100vh",
+        overflow: "hidden",
         background: `
           radial-gradient(
             circle at 50% -10%,
@@ -858,7 +957,6 @@ export default function App() {
         color: C.white,
         fontFamily:
           "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        boxSizing: "border-box",
       }}
     >
       {/* =================================================
@@ -866,35 +964,38 @@ export default function App() {
           ================================================= */}
 
       <header
+        className="app-header"
         style={{
           width: "100%",
+          height: 78,
           borderBottom:
             `1px solid ${C.border}`,
           background:
-            "rgba(8,17,38,0.92)",
+            "rgba(8,17,38,0.95)",
           backdropFilter:
             "blur(12px)",
-          position: "sticky",
-          top: 0,
+          position: "relative",
           zIndex: 20,
         }}
       >
         <div
           style={{
+            width: "100%",
             maxWidth: 1180,
+            height: "100%",
             margin: "0 auto",
             padding:
-              "18px 22px",
+              "10px 22px",
           }}
         >
           <div
             style={{
+              height: "100%",
               display: "flex",
               alignItems: "center",
               justifyContent:
                 "space-between",
-              gap: 20,
-              flexWrap: "wrap",
+              gap: 15,
             }}
           >
             {/* BRAND */}
@@ -903,14 +1004,16 @@ export default function App() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 14,
+                gap: 12,
+                minWidth: 0,
               }}
             >
               <div
+                className="brand-logo"
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
+                  width: 45,
+                  height: 45,
+                  borderRadius: 11,
                   background:
                     "linear-gradient(135deg,#16264b,#0e1933)",
                   border:
@@ -920,14 +1023,12 @@ export default function App() {
                     "center",
                   justifyContent:
                     "center",
-                  boxShadow:
-                    "0 8px 30px rgba(0,0,0,.2)",
                   flexShrink: 0,
                 }}
               >
                 <svg
-                  width="36"
-                  height="36"
+                  width="34"
+                  height="34"
                   viewBox="0 0 36 36"
                 >
                   <text
@@ -954,17 +1055,20 @@ export default function App() {
                 </svg>
               </div>
 
-              <div>
+              <div
+                style={{
+                  minWidth: 0,
+                }}
+              >
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     color: C.lime,
                     fontWeight: 700,
                     letterSpacing:
-                      "1.5px",
+                      "1.4px",
                     textTransform:
                       "uppercase",
-                    marginBottom: 3,
                   }}
                 >
                   Office Planning
@@ -972,8 +1076,8 @@ export default function App() {
 
                 <h1
                   style={{
-                    margin: 0,
-                    fontSize: 23,
+                    margin: "2px 0 0",
+                    fontSize: 21,
                     lineHeight: 1.1,
                     fontWeight: 750,
                     letterSpacing:
@@ -984,16 +1088,20 @@ export default function App() {
                 </h1>
 
                 <p
+                  className="header-description"
                   style={{
                     margin:
-                      "5px 0 0",
+                      "3px 0 0",
                     color:
                       C.textMuted,
-                    fontSize: 12,
+                    fontSize: 10,
+                    whiteSpace:
+                      "nowrap",
                   }}
                 >
-                  Plan meetings, office activities,
-                  travel & important events
+                  Plan meetings, office
+                  activities, travel &
+                  important events
                 </p>
               </div>
             </div>
@@ -1004,6 +1112,7 @@ export default function App() {
               style={{
                 position:
                   "relative",
+                flexShrink: 0,
               }}
             >
               {saving && (
@@ -1012,8 +1121,8 @@ export default function App() {
                     position:
                       "absolute",
                     right: 0,
-                    top: -19,
-                    fontSize: 10,
+                    top: -17,
+                    fontSize: 9,
                     color:
                       C.lime,
                   }}
@@ -1028,7 +1137,7 @@ export default function App() {
                     display: "flex",
                     alignItems:
                       "center",
-                    gap: 9,
+                    gap: 7,
                   }}
                 >
                   <div
@@ -1036,17 +1145,17 @@ export default function App() {
                       display: "flex",
                       alignItems:
                         "center",
-                      gap: 7,
+                      gap: 6,
                       padding:
-                        "8px 12px",
-                      borderRadius: 9,
+                        "7px 10px",
+                      borderRadius: 8,
                       background:
                         C.greenDim,
                       border:
                         `1px solid rgba(52,211,153,.22)`,
                       color:
                         C.green,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 700,
                     }}
                   >
@@ -1061,14 +1170,14 @@ export default function App() {
                     style={{
                       ...buttonBase,
                       padding:
-                        "8px 13px",
+                        "7px 11px",
                       border:
                         `1px solid ${C.border}`,
                       background:
                         "transparent",
                       color:
                         C.textMuted,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: 600,
                     }}
                   >
@@ -1085,16 +1194,14 @@ export default function App() {
                   style={{
                     ...buttonBase,
                     padding:
-                      "9px 17px",
+                      "8px 14px",
                     border:
                       `1px solid ${C.border}`,
                     background:
                       "linear-gradient(135deg,#17264a,#111d3a)",
                     color: C.white,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 700,
-                    boxShadow:
-                      "0 5px 20px rgba(0,0,0,.15)",
                   }}
                 >
                   🔐 Admin
@@ -1106,28 +1213,29 @@ export default function App() {
               {showLogin &&
                 !isAdmin && (
                   <div
+                    className="login-panel"
                     style={{
                       position:
                         "absolute",
                       top:
-                        "calc(100% + 10px)",
+                        "calc(100% + 9px)",
                       right: 0,
-                      width: 310,
+                      width: 300,
                       background:
                         C.card,
                       border:
                         `1px solid ${C.border}`,
-                      borderRadius: 12,
-                      padding: 17,
+                      borderRadius: 11,
+                      padding: 15,
                       boxShadow:
-                        "0 18px 50px rgba(0,0,0,.4)",
-                      zIndex: 30,
+                        "0 18px 50px rgba(0,0,0,.45)",
+                      zIndex: 100,
                     }}
                   >
                     <div
                       style={{
                         marginBottom:
-                          12,
+                          10,
                       }}
                     >
                       <div
@@ -1141,10 +1249,10 @@ export default function App() {
 
                       <div
                         style={{
-                          fontSize: 11,
+                          fontSize: 10,
                           color:
                             C.textMuted,
-                          marginTop: 3,
+                          marginTop: 2,
                         }}
                       >
                         Sign in to manage
@@ -1167,7 +1275,7 @@ export default function App() {
                       }
                       style={{
                         ...inputStyle,
-                        marginBottom: 8,
+                        marginBottom: 7,
                       }}
                     />
 
@@ -1194,18 +1302,18 @@ export default function App() {
                       }}
                       style={{
                         ...inputStyle,
-                        marginBottom: 9,
+                        marginBottom: 8,
                       }}
                     />
 
                     {loginError && (
                       <div
                         style={{
-                          fontSize: 11,
+                          fontSize: 10,
                           color:
                             C.red,
                           marginBottom:
-                            9,
+                            8,
                         }}
                       >
                         {loginError}
@@ -1214,9 +1322,8 @@ export default function App() {
 
                     <div
                       style={{
-                        display:
-                          "flex",
-                        gap: 7,
+                        display: "flex",
+                        gap: 6,
                       }}
                     >
                       <button
@@ -1229,14 +1336,14 @@ export default function App() {
                         style={{
                           ...buttonBase,
                           padding:
-                            "8px 16px",
+                            "8px 14px",
                           background:
                             C.lime,
                           color:
                             C.navy,
                           border:
                             "none",
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: 800,
                         }}
                       >
@@ -1257,14 +1364,14 @@ export default function App() {
                         style={{
                           ...buttonBase,
                           padding:
-                            "8px 14px",
+                            "8px 13px",
                           background:
                             "transparent",
                           color:
                             C.textMuted,
                           border:
                             `1px solid ${C.border}`,
-                          fontSize: 12,
+                          fontSize: 11,
                         }}
                       >
                         Cancel
@@ -1282,33 +1389,39 @@ export default function App() {
           ================================================= */}
 
       <main
+        className="main-area"
         style={{
           width: "100%",
           maxWidth: 1180,
+          height:
+            "calc(100vh - 78px)",
           margin: "0 auto",
           padding:
-            "26px 22px 50px",
+            "14px 22px 12px",
           boxSizing: "border-box",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection:
+            "column",
         }}
       >
         {/* INTRO */}
 
         <section
+          className="intro-section"
           style={{
-            marginBottom: 22,
+            flexShrink: 0,
+            marginBottom: 10,
           }}
         >
           <div
             style={{
-              display:
-                "flex",
+              display: "flex",
               alignItems:
-                "flex-end",
+                "center",
               justifyContent:
                 "space-between",
-              gap: 15,
-              flexWrap:
-                "wrap",
+              gap: 10,
             }}
           >
             <div>
@@ -1316,25 +1429,26 @@ export default function App() {
                 style={{
                   color:
                     C.textMuted,
-                  fontSize: 11,
+                  fontSize: 9,
                   fontWeight: 600,
                   letterSpacing:
                     ".4px",
                   marginBottom:
-                    6,
+                    3,
                 }}
               >
-                OFFICE CALENDAR
-                · {YEAR}
+                OFFICE CALENDAR ·{" "}
+                {YEAR}
               </div>
 
               <h2
                 style={{
                   margin: 0,
-                  fontSize: 27,
+                  fontSize: 22,
+                  lineHeight: 1.1,
                   fontWeight: 750,
                   letterSpacing:
-                    "-.6px",
+                    "-.5px",
                 }}
               >
                 Keep the whole team
@@ -1355,11 +1469,12 @@ export default function App() {
                 style={{
                   color:
                     C.green,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 600,
                 }}
               >
-                ● You can manage events
+                ● You can manage
+                events
               </div>
             )}
           </div>
@@ -1370,19 +1485,19 @@ export default function App() {
             ================================================= */}
 
         <div
+          className="month-tabs"
           style={{
             background:
               "rgba(17,29,58,.75)",
             border:
               `1px solid ${C.border}`,
-            borderRadius: 12,
-            padding: 5,
-            display:
-              "flex",
-            gap: 5,
-            marginBottom: 18,
-            overflowX:
-              "auto",
+            borderRadius: 10,
+            padding: 4,
+            display: "flex",
+            gap: 4,
+            marginBottom: 10,
+            overflowX: "auto",
+            flexShrink: 0,
           }}
         >
           {MONTHS.map(
@@ -1404,9 +1519,9 @@ export default function App() {
                   style={{
                     ...buttonBase,
                     flex: 1,
-                    minWidth: 120,
+                    minWidth: 105,
                     padding:
-                      "10px 15px",
+                      "8px 12px",
                     border:
                       active
                         ? `1px solid ${C.lime}`
@@ -1419,7 +1534,7 @@ export default function App() {
                       active
                         ? C.lime
                         : C.textMuted,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 750,
                   }}
                 >
@@ -1427,7 +1542,7 @@ export default function App() {
                   <span
                     style={{
                       opacity:
-                        .55,
+                        0.5,
                       fontWeight:
                         500,
                     }}
@@ -1444,6 +1559,7 @@ export default function App() {
 
         {error && (
           <div
+            className="error-box"
             style={{
               background:
                 C.redDim,
@@ -1451,11 +1567,11 @@ export default function App() {
                 `1px solid rgba(224,82,101,.25)`,
               color: C.red,
               padding:
-                "10px 13px",
-              borderRadius: 9,
-              fontSize: 12,
-              marginBottom:
-                12,
+                "7px 11px",
+              borderRadius: 8,
+              fontSize: 10,
+              marginBottom: 8,
+              flexShrink: 0,
             }}
           >
             {error}
@@ -1467,41 +1583,45 @@ export default function App() {
             ================================================= */}
 
         <section
+          className="calendar-section"
           style={{
             background:
               "rgba(17,29,58,.7)",
             border:
               `1px solid ${C.border}`,
-            borderRadius: 15,
-            overflow:
-              "hidden",
+            borderRadius: 13,
+            overflow: "hidden",
             boxShadow:
-              "0 20px 60px rgba(0,0,0,.18)",
+              "0 15px 50px rgba(0,0,0,.18)",
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection:
+              "column",
           }}
         >
           {/* CALENDAR TITLE BAR */}
 
           <div
+            className="calendar-title"
             style={{
               padding:
-                "16px 18px",
+                "10px 15px",
               borderBottom:
                 `1px solid ${C.border}`,
-              display:
-                "flex",
+              display: "flex",
               justifyContent:
                 "space-between",
               alignItems:
                 "center",
-              gap: 12,
-              flexWrap:
-                "wrap",
+              gap: 10,
+              flexShrink: 0,
             }}
           >
             <div>
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: 750,
                 }}
               >
@@ -1511,8 +1631,8 @@ export default function App() {
 
               <div
                 style={{
-                  marginTop: 3,
-                  fontSize: 11,
+                  marginTop: 2,
+                  fontSize: 9,
                   color:
                     C.textMuted,
                 }}
@@ -1524,7 +1644,7 @@ export default function App() {
 
             <div
               style={{
-                fontSize: 11,
+                fontSize: 9,
                 color:
                   C.textMuted,
               }}
@@ -1538,14 +1658,15 @@ export default function App() {
           {/* DAY HEADERS */}
 
           <div
+            className="day-headers"
             style={{
-              display:
-                "grid",
+              display: "grid",
               gridTemplateColumns:
                 "repeat(7, minmax(0, 1fr))",
               gap: 1,
               background:
                 C.border,
+              flexShrink: 0,
             }}
           >
             {DAYS_HEADER.map(
@@ -1563,8 +1684,8 @@ export default function App() {
                     textAlign:
                       "center",
                     padding:
-                      "11px 4px",
-                    fontSize: 10,
+                      "7px 3px",
+                    fontSize: 9,
                     fontWeight: 750,
                     color:
                       index >= 5
@@ -1574,7 +1695,7 @@ export default function App() {
                           : C.blue
                         : C.textMuted,
                     letterSpacing:
-                      ".4px",
+                      ".3px",
                   }}
                 >
                   {dayName}
@@ -1583,270 +1704,301 @@ export default function App() {
             )}
           </div>
 
-          {/* CALENDAR */}
+          {/* CALENDAR GRID */}
 
-          {buildMonthGrid(
-            activeMonth
-          ).map(
-            (row, rowIndex) => (
-              <div
-                key={
-                  rowIndex
-                }
-                style={{
-                  display:
-                    "grid",
-                  gridTemplateColumns:
-                    "repeat(7, minmax(0, 1fr))",
-                  gap: 1,
-                  background:
-                    C.border,
-                  borderTop:
+          <div
+            className="calendar-grid"
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection:
+                "column",
+              gap: 1,
+              background:
+                C.border,
+            }}
+          >
+            {buildMonthGrid(
+              activeMonth
+            ).map(
+              (row, rowIndex) => (
+                <div
+                  key={
                     rowIndex
-                      ? `1px solid ${C.border}`
-                      : "none",
-                }}
-              >
-                {row.map(
-                  (
-                    day,
-                    columnIndex
-                  ) => {
-                    if (
-                      !day
-                    ) {
+                  }
+                  className="calendar-row"
+                  style={{
+                    display:
+                      "grid",
+                    gridTemplateColumns:
+                      "repeat(7, minmax(0, 1fr))",
+                    gap: 1,
+                    background:
+                      C.border,
+                    flex: 1,
+                    minHeight: 0,
+                  }}
+                >
+                  {row.map(
+                    (
+                      day,
+                      columnIndex
+                    ) => {
+                      if (!day) {
+                        return (
+                          <div
+                            key={
+                              columnIndex
+                            }
+                            style={{
+                              background:
+                                "rgba(17,29,58,.38)",
+                              minWidth: 0,
+                              minHeight: 0,
+                            }}
+                          />
+                        );
+                      }
+
+                      const key =
+                        dateKey(
+                          YEAR,
+                          activeMonth,
+                          day
+                        );
+
+                      const event =
+                        getEvent(
+                          activeMonth,
+                          day
+                        );
+
+                      const isSelected =
+                        selected?.month ===
+                          activeMonth &&
+                        selected?.day ===
+                          day;
+
+                      const isWeekend =
+                        columnIndex >=
+                        5;
+
+                      const typeStyle =
+                        event
+                          ? getTypeStyle(
+                              event.type,
+                              event.official
+                            )
+                          : null;
+
                       return (
                         <div
                           key={
                             columnIndex
                           }
+                          onClick={() =>
+                            selectDate(
+                              day
+                            )
+                          }
+                          className={`calendar-cell ${
+                            isSelected
+                              ? "selected-cell"
+                              : ""
+                          }`}
                           style={{
-                            minHeight:
-                              102,
+                            minWidth: 0,
+                            minHeight: 0,
+                            padding:
+                              "6px 7px",
                             background:
-                              "rgba(17,29,58,.38)",
-                          }}
-                        />
-                      );
-                    }
-
-                    const key =
-                      dateKey(
-                        YEAR,
-                        activeMonth,
-                        day
-                      );
-
-                    const event =
-                      getEvent(
-                        activeMonth,
-                        day
-                      );
-
-                    const isSelected =
-                      selected?.month ===
-                        activeMonth &&
-                      selected?.day ===
-                        day;
-
-                    const isWeekend =
-                      columnIndex >=
-                      5;
-
-                    const typeStyle =
-                      event
-                        ? getTypeStyle(
-                            event.type,
-                            event.official
-                          )
-                        : null;
-
-                    return (
-                      <div
-                        key={
-                          columnIndex
-                        }
-                        onClick={() =>
-                          selectDate(
-                            day
-                          )
-                        }
-                        style={{
-                          minHeight:
-                            102,
-                          padding:
-                            "9px 9px 8px",
-                          background:
-                            isSelected
-                              ? C.cardSelected
-                              : C.card,
-                          cursor:
-                            "pointer",
-                          position:
-                            "relative",
-                          boxSizing:
-                            "border-box",
-                          outline:
-                            isSelected
-                              ? `2px solid ${C.lime}`
-                              : "none",
-                          outlineOffset:
-                            "-2px",
-                          transition:
-                            "background .12s ease",
-                        }}
-                      >
-                        {/* DATE */}
-
-                        <div
-                          style={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            justifyContent:
-                              "space-between",
+                              isSelected
+                                ? C.cardSelected
+                                : C.card,
+                            cursor:
+                              "pointer",
+                            position:
+                              "relative",
+                            boxSizing:
+                              "border-box",
+                            outline:
+                              isSelected
+                                ? `2px solid ${C.lime}`
+                                : "none",
+                            outlineOffset:
+                              "-2px",
+                            overflow:
+                              "hidden",
                           }}
                         >
-                          <span
-                            style={{
-                              fontSize: 15,
-                              fontWeight:
-                                isSelected
-                                  ? 800
-                                  : 600,
-                              color:
-                                isSelected
-                                  ? C.lime
-                                  : columnIndex ===
-                                    6
-                                  ? C.red
-                                  : isWeekend
-                                  ? C.blue
-                                  : C.white,
-                            }}
-                          >
-                            {day}
-                          </span>
+                          {/* DATE */}
 
-                          {event && (
-                            <span
-                              style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius:
-                                  "50%",
-                                background:
-                                  event.color ||
-                                  C.blue,
-                                boxShadow:
-                                  `0 0 8px ${event.color || C.blue}`,
-                              }}
-                            />
-                          )}
-                        </div>
-
-                        {/* EVENT */}
-
-                        {event && (
                           <div
                             style={{
-                              marginTop:
-                                13,
-                              borderRadius:
-                                7,
-                              padding:
-                                "6px 7px",
-                              background:
-                                typeStyle.background,
-                              border:
-                                `1px solid ${typeStyle.color}33`,
+                              display:
+                                "flex",
+                              alignItems:
+                                "center",
+                              justifyContent:
+                                "space-between",
                             }}
                           >
-                            <div
+                            <span
                               style={{
-                                color:
-                                  typeStyle.color,
-                                fontSize: 9,
+                                fontSize: 13,
                                 fontWeight:
-                                  750,
-                                marginBottom:
-                                  3,
-                                textTransform:
-                                  "uppercase",
-                                letterSpacing:
-                                  ".25px",
+                                  isSelected
+                                    ? 800
+                                    : 600,
+                                color:
+                                  isSelected
+                                    ? C.lime
+                                    : columnIndex ===
+                                      6
+                                    ? C.red
+                                    : isWeekend
+                                    ? C.blue
+                                    : C.white,
                               }}
                             >
-                              {event.type}
-                            </div>
+                              {day}
+                            </span>
 
+                            {event && (
+                              <span
+                                style={{
+                                  width: 5,
+                                  height: 5,
+                                  borderRadius:
+                                    "50%",
+                                  background:
+                                    event.color ||
+                                    C.blue,
+                                  boxShadow:
+                                    `0 0 7px ${event.color || C.blue}`,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            )}
+                          </div>
+
+                          {/* EVENT */}
+
+                          {event && (
                             <div
+                              className="calendar-event"
                               style={{
-                                color:
-                                  C.white,
-                                fontSize: 10,
-                                lineHeight:
-                                  1.3,
-                                fontWeight:
-                                  600,
-                                display:
-                                  "-webkit-box",
-                                WebkitLineClamp:
-                                  2,
-                                WebkitBoxOrient:
-                                  "vertical",
+                                marginTop: 7,
+                                borderRadius:
+                                  6,
+                                padding:
+                                  "5px 6px",
+                                background:
+                                  typeStyle.background,
+                                border:
+                                  `1px solid ${typeStyle.color}33`,
                                 overflow:
                                   "hidden",
                               }}
                             >
-                              {event.name}
+                              <div
+                                style={{
+                                  color:
+                                    typeStyle.color,
+                                  fontSize: 8,
+                                  fontWeight:
+                                    750,
+                                  marginBottom:
+                                    2,
+                                  textTransform:
+                                    "uppercase",
+                                  letterSpacing:
+                                    ".2px",
+                                  whiteSpace:
+                                    "nowrap",
+                                  overflow:
+                                    "hidden",
+                                  textOverflow:
+                                    "ellipsis",
+                                }}
+                              >
+                                {
+                                  event.type
+                                }
+                              </div>
+
+                              <div
+                                style={{
+                                  color:
+                                    C.white,
+                                  fontSize: 9,
+                                  lineHeight:
+                                    1.25,
+                                  fontWeight:
+                                    600,
+                                  display:
+                                    "-webkit-box",
+                                  WebkitLineClamp:
+                                    2,
+                                  WebkitBoxOrient:
+                                    "vertical",
+                                  overflow:
+                                    "hidden",
+                                  wordBreak:
+                                    "break-word",
+                                }}
+                              >
+                                {
+                                  event.name
+                                }
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {!event && (
-                          <div
-                            style={{
-                              marginTop:
-                                22,
-                              color:
-                                C.textDim,
-                              fontSize: 9,
-                              opacity:
-                                .45,
-                            }}
-                          >
-                            —
-                          </div>
-                        )}
+                          {!event && (
+                            <div
+                              style={{
+                                marginTop:
+                                  10,
+                                color:
+                                  C.textDim,
+                                fontSize: 8,
+                                opacity:
+                                  0.35,
+                              }}
+                            >
+                              —
+                            </div>
+                          )}
 
-                        {/* BOTTOM BAR */}
+                          {/* BOTTOM BAR */}
 
-                        {event && (
-                          <div
-                            style={{
-                              position:
-                                "absolute",
-                              left: 9,
-                              right: 9,
-                              bottom: 5,
-                              height: 2,
-                              borderRadius:
-                                2,
-                              background:
-                                event.color ||
-                                C.blue,
-                            }}
-                          />
-                        )}
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            )
-          )}
+                          {event && (
+                            <div
+                              style={{
+                                position:
+                                  "absolute",
+                                left: 7,
+                                right: 7,
+                                bottom: 3,
+                                height: 2,
+                                borderRadius:
+                                  2,
+                                background:
+                                  event.color ||
+                                  C.blue,
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              )
+            )}
+          </div>
         </section>
 
         {/* =================================================
@@ -1854,20 +2006,20 @@ export default function App() {
             ================================================= */}
 
         <div
+          className="legend"
           style={{
-            display:
-              "flex",
+            display: "flex",
             alignItems:
               "center",
-            gap: 15,
-            flexWrap:
-              "wrap",
-            marginTop: 13,
+            gap: 12,
+            flexWrap: "wrap",
+            marginTop: 7,
             padding:
-              "0 4px",
+              "0 3px",
             color:
               C.textMuted,
-            fontSize: 10,
+            fontSize: 9,
+            flexShrink: 0,
           }}
         >
           {[
@@ -1904,12 +2056,12 @@ export default function App() {
                     "flex",
                   alignItems:
                     "center",
-                  gap: 5,
+                  gap: 4,
                 }}
               >
                 <span
                   style={{
-                    width: 13,
+                    width: 11,
                     height: 3,
                     borderRadius:
                       2,
@@ -1929,16 +2081,20 @@ export default function App() {
             ================================================= */}
 
         <section
+          className="detail-panel"
           style={{
-            marginTop: 20,
+            marginTop: 8,
             background:
               C.card,
             border:
               `1px solid ${C.border}`,
-            borderRadius: 13,
+            borderRadius: 11,
             padding:
-              "20px 22px",
-            minHeight: 115,
+              "11px 15px",
+            minHeight: 75,
+            maxHeight: 155,
+            overflowY: "auto",
+            flexShrink: 0,
           }}
         >
           {/* NOTHING SELECTED */}
@@ -1947,10 +2103,8 @@ export default function App() {
             <div>
               <div
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 700,
-                  color:
-                    C.white,
                 }}
               >
                 Select a date
@@ -1959,10 +2113,10 @@ export default function App() {
               <p
                 style={{
                   margin:
-                    "6px 0 0",
+                    "4px 0 0",
                   color:
                     C.textMuted,
-                  fontSize: 12,
+                  fontSize: 10,
                 }}
               >
                 Click any date above to
@@ -1974,24 +2128,19 @@ export default function App() {
               "add" ||
             editing ===
               "edit" ? (
-            // ─────────────────────
-            // FORM
-            // ─────────────────────
+            /* FORM */
 
             <div>
               <div
                 style={{
-                  display:
-                    "flex",
+                  display: "flex",
                   justifyContent:
                     "space-between",
                   alignItems:
                     "center",
                   gap: 10,
                   marginBottom:
-                    15,
-                  flexWrap:
-                    "wrap",
+                    8,
                 }}
               >
                 <div>
@@ -1999,7 +2148,7 @@ export default function App() {
                     style={{
                       color:
                         C.lime,
-                      fontSize: 11,
+                      fontSize: 9,
                       fontWeight:
                         700,
                     }}
@@ -2013,8 +2162,8 @@ export default function App() {
                   <div
                     style={{
                       marginTop:
-                        3,
-                      fontSize: 17,
+                        2,
+                      fontSize: 14,
                       fontWeight:
                         750,
                     }}
@@ -2029,13 +2178,12 @@ export default function App() {
 
               <div
                 style={{
-                  maxWidth:
-                    650,
+                  maxWidth: 700,
                   display:
                     "grid",
                   gridTemplateColumns:
                     "repeat(2, minmax(0, 1fr))",
-                  gap: 10,
+                  gap: 7,
                 }}
               >
                 <input
@@ -2088,7 +2236,9 @@ export default function App() {
                             C.card,
                         }}
                       >
-                        {type.value}
+                        {
+                          type.value
+                        }
                       </option>
                     )
                   )}
@@ -2154,7 +2304,7 @@ export default function App() {
                           .value,
                     })
                   }
-                  rows={4}
+                  rows={2}
                   style={{
                     ...inputStyle,
                     resize:
@@ -2170,8 +2320,8 @@ export default function App() {
                       "flex",
                     alignItems:
                       "center",
-                    gap: 8,
-                    fontSize: 12,
+                    gap: 7,
+                    fontSize: 10,
                     color:
                       C.textMuted,
                     cursor:
@@ -2201,7 +2351,7 @@ export default function App() {
                       "flex",
                     justifyContent:
                       "flex-end",
-                    gap: 7,
+                    gap: 6,
                   }}
                 >
                   <button
@@ -2213,14 +2363,14 @@ export default function App() {
                     style={{
                       ...buttonBase,
                       padding:
-                        "9px 15px",
+                        "7px 12px",
                       border:
                         `1px solid ${C.border}`,
                       background:
                         "transparent",
                       color:
                         C.textMuted,
-                      fontSize: 12,
+                      fontSize: 10,
                     }}
                   >
                     Cancel
@@ -2238,14 +2388,14 @@ export default function App() {
                       style={{
                         ...buttonBase,
                         padding:
-                          "9px 15px",
+                          "7px 12px",
                         border:
                           "none",
                         background:
                           C.redDim,
                         color:
                           C.red,
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight:
                           700,
                       }}
@@ -2265,7 +2415,7 @@ export default function App() {
                     style={{
                       ...buttonBase,
                       padding:
-                        "9px 18px",
+                        "7px 14px",
                       border:
                         "none",
                       background:
@@ -2276,7 +2426,7 @@ export default function App() {
                         form.name.trim()
                           ? C.navy
                           : C.textDim,
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight:
                         800,
                     }}
@@ -2289,30 +2439,29 @@ export default function App() {
               </div>
             </div>
           ) : selectedEvent ? (
-            // ─────────────────────
-            // EVENT DETAIL
-            // ─────────────────────
+            /* EVENT DETAIL */
 
             <div>
               <div
                 style={{
-                  display:
-                    "flex",
+                  display: "flex",
                   justifyContent:
                     "space-between",
                   alignItems:
                     "flex-start",
-                  gap: 15,
-                  flexWrap:
-                    "wrap",
+                  gap: 10,
                 }}
               >
-                <div>
+                <div
+                  style={{
+                    minWidth: 0,
+                  }}
+                >
                   <div
                     style={{
                       color:
                         C.lime,
-                      fontSize: 11,
+                      fontSize: 9,
                       fontWeight:
                         700,
                     }}
@@ -2332,10 +2481,12 @@ export default function App() {
                   <h3
                     style={{
                       margin:
-                        "5px 0 0",
-                      fontSize: 21,
+                        "3px 0 0",
+                      fontSize: 16,
                       fontWeight:
                         750,
+                      lineHeight:
+                        1.2,
                     }}
                   >
                     {
@@ -2350,7 +2501,8 @@ export default function App() {
                       style={{
                         display:
                           "flex",
-                        gap: 7,
+                        gap: 5,
+                        flexShrink: 0,
                       }}
                     >
                       <button
@@ -2362,14 +2514,14 @@ export default function App() {
                         style={{
                           ...buttonBase,
                           padding:
-                            "7px 14px",
+                            "6px 11px",
                           background:
                             "transparent",
                           border:
                             `1px solid ${C.border}`,
                           color:
                             C.white,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight:
                             700,
                         }}
@@ -2387,14 +2539,14 @@ export default function App() {
                         style={{
                           ...buttonBase,
                           padding:
-                            "7px 14px",
+                            "6px 11px",
                           background:
                             C.redDim,
                           border:
                             "none",
                           color:
                             C.red,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight:
                             700,
                         }}
@@ -2411,11 +2563,10 @@ export default function App() {
                 style={{
                   display:
                     "flex",
-                  gap: 6,
+                  gap: 5,
                   flexWrap:
                     "wrap",
-                  marginTop:
-                    12,
+                  marginTop: 7,
                 }}
               >
                 {(() => {
@@ -2433,15 +2584,17 @@ export default function App() {
                         color:
                           style.color,
                         padding:
-                          "4px 10px",
+                          "3px 8px",
                         borderRadius:
                           20,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight:
                           700,
                       }}
                     >
-                      {selectedEvent.type}
+                      {
+                        selectedEvent.type
+                      }
                     </span>
                   );
                 })()}
@@ -2453,10 +2606,10 @@ export default function App() {
                     color:
                       C.textMuted,
                     padding:
-                      "4px 10px",
+                      "3px 8px",
                     borderRadius:
                       20,
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight:
                       600,
                   }}
@@ -2475,10 +2628,10 @@ export default function App() {
                         color:
                           C.green,
                         padding:
-                          "4px 10px",
+                          "3px 8px",
                         borderRadius:
                           20,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight:
                           700,
                       }}
@@ -2496,10 +2649,10 @@ export default function App() {
                       color:
                         C.lime,
                       padding:
-                        "4px 10px",
+                        "3px 8px",
                       borderRadius:
                         20,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight:
                         700,
                     }}
@@ -2515,14 +2668,14 @@ export default function App() {
                 <p
                   style={{
                     margin:
-                      "13px 0 0",
+                      "7px 0 0",
                     color:
                       C.textMuted,
-                    fontSize: 13,
+                    fontSize: 10,
                     lineHeight:
-                      1.65,
+                      1.45,
                     maxWidth:
-                      800,
+                      850,
                   }}
                 >
                   {
@@ -2531,45 +2684,26 @@ export default function App() {
                 </p>
               )}
 
-              {/* ADMIN ACTIONS */}
+              {/* ADMIN MOVE */}
 
               {!selectedEvent.official &&
                 isAdmin && (
                   <div
                     style={{
-                      marginTop:
-                        17,
+                      marginTop: 8,
                       paddingTop:
-                        14,
+                        7,
                       borderTop:
                         `1px solid ${C.border}`,
                     }}
                   >
                     <div
                       style={{
-                        fontSize: 10,
-                        color:
-                          C.textDim,
-                        fontWeight:
-                          700,
-                        textTransform:
-                          "uppercase",
-                        letterSpacing:
-                          ".6px",
-                        marginBottom:
-                          8,
-                      }}
-                    >
-                      Admin tools
-                    </div>
-
-                    <div
-                      style={{
                         display:
                           "flex",
                         alignItems:
                           "center",
-                        gap: 8,
+                        gap: 6,
                         flexWrap:
                           "wrap",
                       }}
@@ -2578,10 +2712,10 @@ export default function App() {
                         style={{
                           color:
                             C.textMuted,
-                          fontSize: 11,
+                          fontSize: 9,
                         }}
                       >
-                        Move event to:
+                        Move event:
                       </span>
 
                       <select
@@ -2591,10 +2725,10 @@ export default function App() {
                         }
                         style={{
                           ...inputStyle,
-                          width: 130,
+                          width: 115,
                           padding:
-                            "7px 9px",
-                          fontSize: 11,
+                            "5px 7px",
+                          fontSize: 9,
                         }}
                       >
                         {MONTHS.map(
@@ -2627,10 +2761,10 @@ export default function App() {
                         placeholder="Day"
                         style={{
                           ...inputStyle,
-                          width: 70,
+                          width: 55,
                           padding:
-                            "7px 9px",
-                          fontSize: 11,
+                            "5px 7px",
+                          fontSize: 9,
                         }}
                       />
 
@@ -2639,14 +2773,12 @@ export default function App() {
                           const month =
                             document.getElementById(
                               "move-month"
-                            )
-                              ?.value;
+                            )?.value;
 
                           const day =
                             document.getElementById(
                               "move-day"
-                            )
-                              ?.value;
+                            )?.value;
 
                           if (
                             month &&
@@ -2661,14 +2793,14 @@ export default function App() {
                         style={{
                           ...buttonBase,
                           padding:
-                            "7px 13px",
+                            "5px 10px",
                           border:
                             `1px solid ${C.border}`,
                           background:
                             "transparent",
                           color:
                             C.white,
-                          fontSize: 11,
+                          fontSize: 9,
                           fontWeight:
                             700,
                         }}
@@ -2680,16 +2812,14 @@ export default function App() {
                 )}
             </div>
           ) : (
-            // ─────────────────────
-            // EMPTY DATE
-            // ─────────────────────
+            /* EMPTY DATE */
 
             <div>
               <div
                 style={{
                   color:
                     C.lime,
-                  fontSize: 11,
+                  fontSize: 9,
                   fontWeight:
                     700,
                 }}
@@ -2708,11 +2838,9 @@ export default function App() {
 
               <div
                 style={{
-                  marginTop:
-                    5,
-                  fontSize: 17,
-                  fontWeight:
-                    700,
+                  marginTop: 3,
+                  fontSize: 14,
+                  fontWeight: 700,
                 }}
               >
                 No event scheduled
@@ -2721,10 +2849,10 @@ export default function App() {
               <p
                 style={{
                   margin:
-                    "5px 0 14px",
+                    "3px 0 7px",
                   color:
                     C.textMuted,
-                  fontSize: 12,
+                  fontSize: 10,
                 }}
               >
                 This date is available
@@ -2741,14 +2869,14 @@ export default function App() {
                   style={{
                     ...buttonBase,
                     padding:
-                      "9px 17px",
+                      "6px 12px",
                     background:
                       C.lime,
                     color:
                       C.navy,
                     border:
                       "none",
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight:
                       800,
                   }}
@@ -2760,20 +2888,25 @@ export default function App() {
           )}
         </section>
 
-        {/* =================================================
-            FOOTER NOTE
-            ================================================= */}
+        {/* FOOTER NOTE */}
 
         <div
+          className="footer-note"
           style={{
-            marginTop: 18,
+            marginTop: 5,
             padding:
-              "12px 4px 0",
+              "2px 3px 0",
             color:
               C.textDim,
-            fontSize: 10,
-            lineHeight:
-              1.6,
+            fontSize: 8,
+            lineHeight: 1.3,
+            flexShrink: 0,
+            whiteSpace:
+              "nowrap",
+            overflow:
+              "hidden",
+            textOverflow:
+              "ellipsis",
           }}
         >
           <strong
@@ -2784,16 +2917,14 @@ export default function App() {
           >
             RB Office Calendar
           </strong>{" "}
-          — Use the calendar to keep track
-          of meetings, office activities,
+          — Meetings, office activities,
           travel, important dates and
-          national events. Admin users can
-          add and manage custom events.
+          national events.
         </div>
       </main>
 
       {/* =================================================
-          MOBILE STYLES
+          GLOBAL CSS
           ================================================= */}
 
       <style>{`
@@ -2801,16 +2932,29 @@ export default function App() {
           box-sizing: border-box;
         }
 
-        html, body, #root {
+        html,
+        body,
+        #root {
           margin: 0;
           padding: 0;
           width: 100%;
+          height: 100%;
           min-height: 100%;
+          overflow: hidden !important;
           background: ${C.navy};
         }
 
+        html {
+          overflow: hidden !important;
+        }
+
         body {
-          overflow-x: hidden;
+          overflow: hidden !important;
+          overscroll-behavior: none;
+        }
+
+        #root {
+          overflow: hidden !important;
         }
 
         button,
@@ -2820,8 +2964,17 @@ export default function App() {
           font-family: inherit;
         }
 
+        button {
+          -webkit-tap-highlight-color: transparent;
+        }
+
         button:hover {
           filter: brightness(1.08);
+        }
+
+        button:disabled {
+          cursor: not-allowed;
+          opacity: .65;
         }
 
         input::placeholder,
@@ -2831,31 +2984,303 @@ export default function App() {
 
         select option {
           color: ${C.white};
+          background: ${C.card};
         }
 
+        textarea {
+          scrollbar-width: thin;
+          scrollbar-color: ${C.border} transparent;
+        }
+
+        .detail-panel {
+          scrollbar-width: thin;
+          scrollbar-color: ${C.border} transparent;
+        }
+
+        /* Desktop / laptop */
+
+        @media (min-width: 721px) {
+          .calendar-cell:hover {
+            background: ${C.cardHover} !important;
+          }
+        }
+
+        /* Medium screens */
+
+        @media (max-height: 760px) {
+          .app-header {
+            height: 68px !important;
+          }
+
+          .main-area {
+            height: calc(100vh - 68px) !important;
+            padding-top: 9px !important;
+            padding-bottom: 7px !important;
+          }
+
+          .intro-section {
+            margin-bottom: 7px !important;
+          }
+
+          .intro-section h2 {
+            font-size: 19px !important;
+          }
+
+          .month-tabs {
+            margin-bottom: 7px !important;
+          }
+
+          .calendar-title {
+            padding-top: 7px !important;
+            padding-bottom: 7px !important;
+          }
+
+          .day-headers > div {
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+          }
+
+          .detail-panel {
+            max-height: 125px !important;
+            padding: 9px 13px !important;
+          }
+
+          .legend {
+            margin-top: 5px !important;
+          }
+
+          .footer-note {
+            display: none !important;
+          }
+        }
+
+        /* Mobile */
+
         @media (max-width: 720px) {
-          main {
+          .app-header {
+            height: 64px !important;
+          }
+
+          .main-area {
+            height: calc(100vh - 64px) !important;
+            padding: 8px !important;
+          }
+
+          .brand-logo {
+            width: 39px !important;
+            height: 39px !important;
+          }
+
+          .header-description {
+            display: none !important;
+          }
+
+          .app-header h1 {
+            font-size: 17px !important;
+          }
+
+          .app-header > div {
             padding-left: 10px !important;
             padding-right: 10px !important;
           }
 
-          header > div {
-            padding-left: 12px !important;
-            padding-right: 12px !important;
+          .intro-section {
+            margin-bottom: 7px !important;
           }
 
-          h1 {
-            font-size: 20px !important;
+          .intro-section h2 {
+            font-size: 18px !important;
           }
 
-          .calendar-mobile {
-            overflow-x: auto;
+          .intro-section > div > div:last-child {
+            display: none !important;
+          }
+
+          .month-tabs {
+            margin-bottom: 7px !important;
+          }
+
+          .month-tabs button {
+            min-width: 90px !important;
+            padding: 7px 8px !important;
+            font-size: 10px !important;
+          }
+
+          .calendar-section {
+            border-radius: 10px !important;
+          }
+
+          .calendar-title {
+            padding: 8px 10px !important;
+          }
+
+          .calendar-title > div:first-child > div:first-child {
+            font-size: 13px !important;
+          }
+
+          .calendar-title > div:first-child > div:last-child {
+            font-size: 8px !important;
+          }
+
+          .day-headers > div {
+            padding: 5px 2px !important;
+            font-size: 8px !important;
+          }
+
+          .calendar-cell {
+            padding: 4px !important;
+          }
+
+          .calendar-cell > div:first-child span:first-child {
+            font-size: 11px !important;
+          }
+
+          .calendar-event {
+            margin-top: 4px !important;
+            padding: 3px 4px !important;
+          }
+
+          .calendar-event > div:first-child {
+            font-size: 6px !important;
+          }
+
+          .calendar-event > div:last-child {
+            font-size: 7px !important;
+          }
+
+          .legend {
+            gap: 7px !important;
+            font-size: 7px !important;
+          }
+
+          .legend span > span {
+            width: 8px !important;
+          }
+
+          .detail-panel {
+            margin-top: 6px !important;
+            padding: 9px 10px !important;
+            max-height: 130px !important;
+            border-radius: 9px !important;
+          }
+
+          .footer-note {
+            display: none !important;
+          }
+
+          .login-panel {
+            right: -5px !important;
+            width: min(300px, calc(100vw - 20px)) !important;
           }
         }
 
-        @media (max-width: 560px) {
-          main {
-            padding-top: 18px !important;
+        /* Very small mobile */
+
+        @media (max-width: 480px) {
+          .app-header {
+            height: 58px !important;
+          }
+
+          .main-area {
+            height: calc(100vh - 58px) !important;
+            padding: 6px !important;
+          }
+
+          .brand-logo {
+            width: 35px !important;
+            height: 35px !important;
+          }
+
+          .app-header h1 {
+            font-size: 15px !important;
+          }
+
+          .app-header div {
+            gap: 7px !important;
+          }
+
+          .app-header button {
+            padding: 6px 9px !important;
+            font-size: 9px !important;
+          }
+
+          .intro-section h2 {
+            font-size: 16px !important;
+          }
+
+          .intro-section {
+            margin-bottom: 5px !important;
+          }
+
+          .month-tabs {
+            padding: 3px !important;
+            gap: 3px !important;
+          }
+
+          .month-tabs button {
+            min-width: 75px !important;
+            padding: 6px 5px !important;
+            font-size: 9px !important;
+          }
+
+          .calendar-title {
+            padding: 6px 8px !important;
+          }
+
+          .calendar-title > div:first-child > div:first-child {
+            font-size: 12px !important;
+          }
+
+          .day-headers > div {
+            font-size: 7px !important;
+            padding: 4px 1px !important;
+          }
+
+          .calendar-cell {
+            padding: 3px !important;
+          }
+
+          .calendar-cell > div:first-child span:first-child {
+            font-size: 10px !important;
+          }
+
+          .calendar-event {
+            margin-top: 3px !important;
+            padding: 2px 3px !important;
+          }
+
+          .calendar-event > div:first-child {
+            font-size: 5px !important;
+            margin-bottom: 1px !important;
+          }
+
+          .calendar-event > div:last-child {
+            font-size: 6px !important;
+          }
+
+          .detail-panel {
+            max-height: 115px !important;
+            padding: 7px 8px !important;
+          }
+
+          .legend {
+            display: none !important;
+          }
+        }
+
+        /* Form responsive */
+
+        @media (max-width: 600px) {
+          .detail-panel textarea {
+            min-height: 45px;
+          }
+
+          .detail-panel [style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+          }
+
+          .detail-panel [style*="grid-column"] {
+            grid-column: 1 !important;
           }
         }
       `}</style>
