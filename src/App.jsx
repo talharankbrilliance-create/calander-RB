@@ -344,7 +344,7 @@ export default function App() {
   }, []);
 
   /* ─────────────────────────────────────────────
-     FETCH EVENTS — FIXED
+     FETCH EVENTS
      ───────────────────────────────────────────── */
 
   const fetchEvents = useCallback(async () => {
@@ -789,6 +789,7 @@ export default function App() {
   return (
     <div className="app">
 
+      {/* HEADER */}
       <header className="header">
         <div className="header-inner">
 
@@ -825,6 +826,7 @@ export default function App() {
             </div>
 
             <div className="brand-text">
+
               <div className="brand-small">
                 Office Planning
               </div>
@@ -837,6 +839,7 @@ export default function App() {
                 Meetings, office activities,
                 travel & important events
               </p>
+
             </div>
 
           </div>
@@ -956,8 +959,10 @@ export default function App() {
         </div>
       </header>
 
+      {/* MAIN */}
       <main className="main">
 
+        {/* INTRO */}
         <section className="intro">
 
           <div>
@@ -979,9 +984,11 @@ export default function App() {
 
         </section>
 
+        {/* MONTH TABS */}
         <div className="month-tabs">
 
           {MONTHS.map((month) => {
+
             const active =
               month.month === activeMonth;
 
@@ -997,10 +1004,13 @@ export default function App() {
                     : "month-btn"
                 }
               >
-                {month.name}
-                <small>
+                <span className="month-name">
+                  {month.name}
+                </span>
+
+                <span className="month-year">
                   {YEAR}
-                </small>
+                </span>
               </button>
             );
           })}
@@ -1013,622 +1023,694 @@ export default function App() {
           </div>
         )}
 
-        <section className="calendar-card">
+        {/* =====================================================
+            DESKTOP WORKSPACE
+            CALENDAR LEFT + DETAILS RIGHT
+            ===================================================== */}
 
-          <div className="calendar-title">
+        <div className="workspace">
 
-            <div>
-              <div className="calendar-month">
-                {currentMonth.name} {YEAR}
-              </div>
+          {/* LEFT SIDE */}
+          <div className="calendar-side">
 
-              <div className="calendar-hint">
-                Click a date to view details
-              </div>
-            </div>
+            <section className="calendar-card">
 
-            <div className="sync-status">
-              {loaded
-                ? "✓ Events synced"
-                : "Loading events…"}
-            </div>
-
-          </div>
-
-          <div className="days-header">
-
-            {DAYS_HEADER.map(
-              (dayName, index) => (
-                <div
-                  key={dayName}
-                  className={
-                    index >= 5
-                      ? index === 6
-                        ? "day-head sunday"
-                        : "day-head saturday"
-                      : "day-head"
-                  }
-                >
-                  <span className="day-full">
-                    {dayName}
-                  </span>
-
-                  <span className="day-short">
-                    {dayName.charAt(0)}
-                  </span>
-                </div>
-              )
-            )}
-
-          </div>
-
-          <div className="calendar-grid">
-
-            {buildMonthGrid(
-              activeMonth
-            ).map(
-              (row, rowIndex) => (
-
-                <div
-                  key={rowIndex}
-                  className="calendar-row"
-                >
-
-                  {row.map(
-                    (
-                      day,
-                      columnIndex
-                    ) => {
-
-                      if (!day) {
-                        return (
-                          <div
-                            key={columnIndex}
-                            className="empty-cell"
-                          />
-                        );
-                      }
-
-                      const event =
-                        getEvent(
-                          activeMonth,
-                          day
-                        );
-
-                      const isSelected =
-                        selected?.month ===
-                          activeMonth &&
-                        selected?.day ===
-                          day;
-
-                      const isWeekend =
-                        columnIndex >= 5;
-
-                      const typeStyle =
-                        event
-                          ? getTypeStyle(
-                              event.type,
-                              event.official
-                            )
-                          : null;
-
-                      return (
-                        <div
-                          key={columnIndex}
-                          onClick={() =>
-                            selectDate(day)
-                          }
-                          className={
-                            isSelected
-                              ? "calendar-cell selected"
-                              : "calendar-cell"
-                          }
-                        >
-
-                          <div className="date-top">
-
-                            <span
-                              className={
-                                columnIndex === 6
-                                  ? "date-number sunday"
-                                  : isWeekend
-                                  ? "date-number saturday"
-                                  : "date-number"
-                              }
-                            >
-                              {day}
-                            </span>
-
-                            {event && (
-                              <span
-                                className="event-dot"
-                                style={{
-                                  background:
-                                    event.color ||
-                                    C.blue,
-                                  boxShadow:
-                                    `0 0 7px ${
-                                      event.color ||
-                                      C.blue
-                                    }`,
-                                }}
-                              />
-                            )}
-
-                          </div>
-
-                          {event ? (
-                            <div
-                              className="event-box"
-                              style={{
-                                background:
-                                  typeStyle.background,
-                                borderColor:
-                                  `${typeStyle.color}33`,
-                              }}
-                            >
-
-                              <div
-                                className="event-type"
-                                style={{
-                                  color:
-                                    typeStyle.color,
-                                }}
-                              >
-                                {event.type}
-                              </div>
-
-                              <div className="event-name">
-                                {event.name}
-                              </div>
-
-                            </div>
-                          ) : (
-                            <div className="no-event">
-                              —
-                            </div>
-                          )}
-
-                          {event && (
-                            <div
-                              className="event-line"
-                              style={{
-                                background:
-                                  event.color ||
-                                  C.blue,
-                              }}
-                            />
-                          )}
-
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-              )
-            )}
-
-          </div>
-
-        </section>
-
-        <div className="legend">
-
-          {[
-            [C.lime, "Official"],
-            [C.green, "Office"],
-            [C.purple, "Meeting"],
-            [C.orange, "Travel"],
-            [C.red, "Important"],
-            [C.blue, "Custom"],
-          ].map(
-            ([color, label]) => (
-              <span
-                key={label}
-                className="legend-item"
-              >
-                <i
-                  style={{
-                    background: color,
-                  }}
-                />
-                {label}
-              </span>
-            )
-          )}
-
-        </div>
-
-        <section className="detail-panel">
-
-          {!selected ? (
-
-            <div>
-              <div className="detail-title">
-                Select a date
-              </div>
-
-              <p className="detail-muted">
-                Click any date above to view events
-                or add office activities.
-              </p>
-            </div>
-
-          ) : editing === "add" ||
-            editing === "edit" ? (
-
-            <div>
-
-              <div className="form-heading">
+              <div className="calendar-title">
 
                 <div>
-                  <div className="form-label">
-                    {editing === "add"
-                      ? "ADD EVENT"
-                      : "EDIT EVENT"}
+                  <div className="calendar-month">
+                    {currentMonth.name} {YEAR}
                   </div>
 
-                  <div className="form-date">
-                    {formatDateForDisplay(
-                      selected.month,
-                      selected.day
-                    )}
+                  <div className="calendar-hint">
+                    Click a date to view details
                   </div>
+                </div>
+
+                <div className="sync-status">
+                  {loaded
+                    ? "✓ Events synced"
+                    : "Loading events…"}
                 </div>
 
               </div>
 
-              <div className="form-grid">
+              <div className="days-header">
 
-                <input
-                  placeholder="Event name *"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      name: e.target.value,
-                    })
-                  }
-                  className="form-input full"
-                />
+                {DAYS_HEADER.map(
+                  (dayName, index) => (
 
-                <select
-                  value={form.type}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      type: e.target.value,
-                    })
-                  }
-                  className="form-input"
-                >
-                  {EVENT_TYPES.map(
-                    (type) => (
-                      <option
-                        key={type.value}
-                        value={type.value}
-                      >
-                        {type.value}
-                      </option>
-                    )
-                  )}
-                </select>
+                    <div
+                      key={dayName}
+                      className={
+                        index >= 5
+                          ? index === 6
+                            ? "day-head sunday"
+                            : "day-head saturday"
+                          : "day-head"
+                      }
+                    >
 
-                <select
-                  value={form.holiday}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      holiday: e.target.value,
-                    })
-                  }
-                  className="form-input"
-                >
-                  <option>
-                    Not a Public Holiday
-                  </option>
+                      <span className="day-full">
+                        {dayName}
+                      </span>
 
-                  <option>
-                    Public Holiday
-                  </option>
+                      <span className="day-short">
+                        {dayName.charAt(0)}
+                      </span>
 
-                  <option>
-                    National Observance
-                  </option>
-                </select>
+                    </div>
 
-                <textarea
-                  placeholder="Description / notes"
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      description:
-                        e.target.value,
-                    })
-                  }
-                  rows={3}
-                  className="form-input textarea full"
-                />
+                  )
+                )}
 
-                <label className="office-check">
+              </div>
+
+              <div className="calendar-grid">
+
+                {buildMonthGrid(
+                  activeMonth
+                ).map(
+                  (row, rowIndex) => (
+
+                    <div
+                      key={rowIndex}
+                      className="calendar-row"
+                    >
+
+                      {row.map(
+                        (
+                          day,
+                          columnIndex
+                        ) => {
+
+                          if (!day) {
+                            return (
+                              <div
+                                key={columnIndex}
+                                className="empty-cell"
+                              />
+                            );
+                          }
+
+                          const event =
+                            getEvent(
+                              activeMonth,
+                              day
+                            );
+
+                          const isSelected =
+                            selected?.month ===
+                              activeMonth &&
+                            selected?.day ===
+                              day;
+
+                          const isWeekend =
+                            columnIndex >= 5;
+
+                          const typeStyle =
+                            event
+                              ? getTypeStyle(
+                                  event.type,
+                                  event.official
+                                )
+                              : null;
+
+                          return (
+                            <div
+                              key={columnIndex}
+                              onClick={() =>
+                                selectDate(day)
+                              }
+                              className={
+                                isSelected
+                                  ? "calendar-cell selected"
+                                  : "calendar-cell"
+                              }
+                            >
+
+                              <div className="date-top">
+
+                                <span
+                                  className={
+                                    columnIndex === 6
+                                      ? "date-number sunday"
+                                      : isWeekend
+                                      ? "date-number saturday"
+                                      : "date-number"
+                                  }
+                                >
+                                  {day}
+                                </span>
+
+                                {event && (
+                                  <span
+                                    className="event-dot"
+                                    style={{
+                                      background:
+                                        event.color ||
+                                        C.blue,
+                                      boxShadow:
+                                        `0 0 7px ${
+                                          event.color ||
+                                          C.blue
+                                        }`,
+                                    }}
+                                  />
+                                )}
+
+                              </div>
+
+                              {event ? (
+
+                                <div
+                                  className="event-box"
+                                  style={{
+                                    background:
+                                      typeStyle.background,
+                                    borderColor:
+                                      `${typeStyle.color}33`,
+                                  }}
+                                >
+
+                                  <div
+                                    className="event-type"
+                                    style={{
+                                      color:
+                                        typeStyle.color,
+                                    }}
+                                  >
+                                    {event.type}
+                                  </div>
+
+                                  <div className="event-name">
+                                    {event.name}
+                                  </div>
+
+                                </div>
+
+                              ) : (
+
+                                <div className="no-event">
+                                  —
+                                </div>
+
+                              )}
+
+                              {event && (
+                                <div
+                                  className="event-line"
+                                  style={{
+                                    background:
+                                      event.color ||
+                                      C.blue,
+                                  }}
+                                />
+                              )}
+
+                            </div>
+                          );
+                        }
+                      )}
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            </section>
+
+            {/* LEGEND */}
+            <div className="legend">
+
+              {[
+                [C.lime, "Official"],
+                [C.green, "Office"],
+                [C.purple, "Meeting"],
+                [C.orange, "Travel"],
+                [C.red, "Important"],
+                [C.blue, "Custom"],
+              ].map(
+                ([color, label]) => (
+
+                  <span
+                    key={label}
+                    className="legend-item"
+                  >
+
+                    <i
+                      style={{
+                        background: color,
+                      }}
+                    />
+
+                    {label}
+
+                  </span>
+
+                )
+              )}
+
+            </div>
+
+          </div>
+
+          {/* =====================================================
+              RIGHT SIDE DETAIL PANEL
+              ===================================================== */}
+
+          <section className="detail-panel">
+
+            {!selected ? (
+
+              <div className="detail-empty">
+
+                <div className="detail-icon">
+                  +
+                </div>
+
+                <div className="detail-title">
+                  Select a date
+                </div>
+
+                <p className="detail-muted">
+                  Click any date above to view events
+                  or add office activities.
+                </p>
+
+              </div>
+
+            ) : editing === "add" ||
+              editing === "edit" ? (
+
+              <div>
+
+                <div className="form-heading">
+
+                  <div>
+
+                    <div className="form-label">
+                      {editing === "add"
+                        ? "ADD EVENT"
+                        : "EDIT EVENT"}
+                    </div>
+
+                    <div className="form-date">
+                      {formatDateForDisplay(
+                        selected.month,
+                        selected.day
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="form-grid">
+
                   <input
-                    type="checkbox"
-                    checked={form.isOffice}
+                    placeholder="Event name *"
+                    value={form.name}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        isOffice:
-                          e.target.checked,
+                        name: e.target.value,
                       })
                     }
+                    className="form-input full"
                   />
-                  Office event
-                </label>
 
-                <div className="form-buttons">
-
-                  <button
-                    onClick={() =>
-                      setEditing(null)
+                  <select
+                    value={form.type}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        type: e.target.value,
+                      })
                     }
-                    className="cancel-form-btn"
+                    className="form-input"
                   >
-                    Cancel
-                  </button>
 
-                  {editing === "edit" && (
-                    <button
-                      onClick={deleteEvent}
-                      disabled={saving}
-                      className="delete-form-btn"
-                    >
-                      Delete
-                    </button>
-                  )}
+                    {EVENT_TYPES.map(
+                      (type) => (
 
-                  <button
-                    onClick={saveEvent}
-                    disabled={
-                      !form.name.trim() ||
-                      saving
-                    }
-                    className="save-form-btn"
-                  >
-                    {saving
-                      ? "Saving…"
-                      : "Save Event"}
-                  </button>
+                        <option
+                          key={type.value}
+                          value={type.value}
+                        >
+                          {type.value}
+                        </option>
 
-                </div>
-
-              </div>
-
-            </div>
-
-          ) : selectedEvent ? (
-
-            <div>
-
-              <div className="detail-header">
-
-                <div>
-                  <div className="detail-date">
-                    {formatDateForDisplay(
-                      selected.month,
-                      selected.day
-                    )}{" "}
-                    ·{" "}
-                    {getDayName(
-                      YEAR,
-                      selected.month,
-                      selected.day
+                      )
                     )}
-                  </div>
 
-                  <h3>
-                    {selectedEvent.name}
-                  </h3>
-                </div>
+                  </select>
 
-                {!selectedEvent.official &&
-                  isAdmin && (
-                    <div className="detail-actions">
+                  <select
+                    value={form.holiday}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        holiday: e.target.value,
+                      })
+                    }
+                    className="form-input"
+                  >
 
-                      <button
-                        onClick={() =>
-                          openEdit(
-                            selectedEvent
-                          )
-                        }
-                        className="edit-btn"
-                      >
-                        Edit
-                      </button>
+                    <option>
+                      Not a Public Holiday
+                    </option>
 
+                    <option>
+                      Public Holiday
+                    </option>
+
+                    <option>
+                      National Observance
+                    </option>
+
+                  </select>
+
+                  <textarea
+                    placeholder="Description / notes"
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        description:
+                          e.target.value,
+                      })
+                    }
+                    rows={4}
+                    className="form-input textarea full"
+                  />
+
+                  <label className="office-check">
+
+                    <input
+                      type="checkbox"
+                      checked={form.isOffice}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          isOffice:
+                            e.target.checked,
+                        })
+                      }
+                    />
+
+                    Office event
+
+                  </label>
+
+                  <div className="form-buttons">
+
+                    <button
+                      onClick={() =>
+                        setEditing(null)
+                      }
+                      className="cancel-form-btn"
+                    >
+                      Cancel
+                    </button>
+
+                    {editing === "edit" && (
                       <button
                         onClick={deleteEvent}
                         disabled={saving}
-                        className="delete-btn"
+                        className="delete-form-btn"
                       >
                         Delete
                       </button>
+                    )}
 
-                    </div>
-                  )}
-
-              </div>
-
-              <div className="tags">
-
-                {(() => {
-                  const style =
-                    getTypeStyle(
-                      selectedEvent.type,
-                      selectedEvent.official
-                    );
-
-                  return (
-                    <span
-                      className="tag"
-                      style={{
-                        color: style.color,
-                        background:
-                          style.background,
-                      }}
+                    <button
+                      onClick={saveEvent}
+                      disabled={
+                        !form.name.trim() ||
+                        saving
+                      }
+                      className="save-form-btn"
                     >
-                      {selectedEvent.type}
-                    </span>
-                  );
-                })()}
-
-                <span className="tag muted-tag">
-                  {selectedEvent.holiday}
-                </span>
-
-                {selectedEvent.isOffice &&
-                  !selectedEvent.official && (
-                    <span className="tag office-tag">
-                      Office Event
-                    </span>
-                  )}
-
-                {selectedEvent.official && (
-                  <span className="tag official-tag">
-                    Official
-                  </span>
-                )}
-
-              </div>
-
-              {selectedEvent.description && (
-                <p className="description">
-                  {selectedEvent.description}
-                </p>
-              )}
-
-              {!selectedEvent.official &&
-                isAdmin && (
-
-                  <div className="admin-tools">
-
-                    <div className="tools-title">
-                      Admin tools
-                    </div>
-
-                    <div className="move-row">
-
-                      <span>
-                        Move event to:
-                      </span>
-
-                      <select
-                        id="move-month"
-                        defaultValue={
-                          selected.month
-                        }
-                        className="move-month"
-                      >
-                        {MONTHS.map(
-                          (month) => (
-                            <option
-                              key={
-                                month.month
-                              }
-                              value={
-                                month.month
-                              }
-                            >
-                              {month.name}
-                            </option>
-                          )
-                        )}
-                      </select>
-
-                      <input
-                        id="move-day"
-                        type="number"
-                        min="1"
-                        max="31"
-                        placeholder="Day"
-                        className="move-day"
-                      />
-
-                      <button
-                        onClick={() => {
-                          const month =
-                            document.getElementById(
-                              "move-month"
-                            )?.value;
-
-                          const day =
-                            document.getElementById(
-                              "move-day"
-                            )?.value;
-
-                          if (
-                            month &&
-                            day
-                          ) {
-                            moveEvent(
-                              month,
-                              day
-                            );
-                          }
-                        }}
-                        className="move-btn"
-                      >
-                        Move
-                      </button>
-
-                    </div>
+                      {saving
+                        ? "Saving…"
+                        : "Save Event"}
+                    </button>
 
                   </div>
-                )}
 
-            </div>
+                </div>
 
-          ) : (
-
-            <div>
-
-              <div className="detail-date">
-                {formatDateForDisplay(
-                  selected.month,
-                  selected.day
-                )}{" "}
-                ·{" "}
-                {getDayName(
-                  YEAR,
-                  selected.month,
-                  selected.day
-                )}
               </div>
 
-              <div className="empty-title">
-                No event scheduled
+            ) : selectedEvent ? (
+
+              <div>
+
+                <div className="detail-header">
+
+                  <div>
+
+                    <div className="detail-date">
+                      {formatDateForDisplay(
+                        selected.month,
+                        selected.day
+                      )}{" "}
+                      ·{" "}
+                      {getDayName(
+                        YEAR,
+                        selected.month,
+                        selected.day
+                      )}
+                    </div>
+
+                    <h3>
+                      {selectedEvent.name}
+                    </h3>
+
+                  </div>
+
+                  {!selectedEvent.official &&
+                    isAdmin && (
+
+                      <div className="detail-actions">
+
+                        <button
+                          onClick={() =>
+                            openEdit(
+                              selectedEvent
+                            )
+                          }
+                          className="edit-btn"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={deleteEvent}
+                          disabled={saving}
+                          className="delete-btn"
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+
+                    )}
+
+                </div>
+
+                <div className="tags">
+
+                  {(() => {
+
+                    const style =
+                      getTypeStyle(
+                        selectedEvent.type,
+                        selectedEvent.official
+                      );
+
+                    return (
+                      <span
+                        className="tag"
+                        style={{
+                          color: style.color,
+                          background:
+                            style.background,
+                        }}
+                      >
+                        {selectedEvent.type}
+                      </span>
+                    );
+
+                  })()}
+
+                  <span className="tag muted-tag">
+                    {selectedEvent.holiday}
+                  </span>
+
+                  {selectedEvent.isOffice &&
+                    !selectedEvent.official && (
+
+                      <span className="tag office-tag">
+                        Office Event
+                      </span>
+
+                    )}
+
+                  {selectedEvent.official && (
+
+                    <span className="tag official-tag">
+                      Official
+                    </span>
+
+                  )}
+
+                </div>
+
+                {selectedEvent.description && (
+
+                  <p className="description">
+                    {selectedEvent.description}
+                  </p>
+
+                )}
+
+                {!selectedEvent.official &&
+                  isAdmin && (
+
+                    <div className="admin-tools">
+
+                      <div className="tools-title">
+                        Admin tools
+                      </div>
+
+                      <div className="move-row">
+
+                        <span>
+                          Move event to:
+                        </span>
+
+                        <select
+                          id="move-month"
+                          defaultValue={
+                            selected.month
+                          }
+                          className="move-month"
+                        >
+
+                          {MONTHS.map(
+                            (month) => (
+
+                              <option
+                                key={
+                                  month.month
+                                }
+                                value={
+                                  month.month
+                                }
+                              >
+                                {month.name}
+                              </option>
+
+                            )
+                          )}
+
+                        </select>
+
+                        <input
+                          id="move-day"
+                          type="number"
+                          min="1"
+                          max="31"
+                          placeholder="Day"
+                          className="move-day"
+                        />
+
+                        <button
+                          onClick={() => {
+
+                            const month =
+                              document.getElementById(
+                                "move-month"
+                              )?.value;
+
+                            const day =
+                              document.getElementById(
+                                "move-day"
+                              )?.value;
+
+                            if (
+                              month &&
+                              day
+                            ) {
+                              moveEvent(
+                                month,
+                                day
+                              );
+                            }
+
+                          }}
+                          className="move-btn"
+                        >
+                          Move
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
               </div>
 
-              <p className="detail-muted">
-                This date is available for an
-                office activity, meeting, travel
-                or custom event.
-              </p>
+            ) : (
 
-              {isAdmin && (
-                <button
-                  onClick={openAdd}
-                  className="add-event-btn"
-                >
-                  + Add Event
-                </button>
-              )}
+              <div>
 
-            </div>
-          )}
+                <div className="detail-date">
+                  {formatDateForDisplay(
+                    selected.month,
+                    selected.day
+                  )}{" "}
+                  ·{" "}
+                  {getDayName(
+                    YEAR,
+                    selected.month,
+                    selected.day
+                  )}
+                </div>
 
-        </section>
+                <div className="empty-title">
+                  No event scheduled
+                </div>
+
+                <p className="detail-muted">
+                  This date is available for an
+                  office activity, meeting, travel
+                  or custom event.
+                </p>
+
+                {isAdmin && (
+
+                  <button
+                    onClick={openAdd}
+                    className="add-event-btn"
+                  >
+                    + Add Event
+                  </button>
+
+                )}
+
+              </div>
+
+            )}
+
+          </section>
+
+        </div>
 
         <div className="footer-note">
           <strong>
@@ -1640,6 +1722,10 @@ export default function App() {
         </div>
 
       </main>
+
+      {/* =========================================================
+          STYLES
+          ========================================================= */}
 
       <style>{`
 
@@ -1653,20 +1739,23 @@ export default function App() {
           margin: 0;
           padding: 0;
           width: 100%;
-          height: 100%;
           min-height: 100%;
           background: ${C.navy};
         }
 
         html {
           overflow-x: hidden;
-          overflow-y: auto;
         }
 
         body {
           overflow-x: hidden;
-          overflow-y: auto;
-          overscroll-behavior: auto;
+          font-family:
+            Inter,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
         }
 
         button,
@@ -1694,11 +1783,15 @@ export default function App() {
           color: ${C.white};
         }
 
+        /* ─────────────────────────────
+           APP
+           ───────────────────────────── */
+
         .app {
           width: 100%;
-          min-height: 100dvh;
-          height: auto;
-          overflow: visible;
+          min-height: 100vh;
+          height: 100vh;
+          overflow: hidden;
           background:
             radial-gradient(
               circle at 50% -10%,
@@ -1707,14 +1800,11 @@ export default function App() {
             ),
             ${C.navy};
           color: ${C.white};
-          font-family:
-            Inter,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif;
         }
+
+        /* ─────────────────────────────
+           HEADER
+           ───────────────────────────── */
 
         .header {
           width: 100%;
@@ -1729,26 +1819,26 @@ export default function App() {
 
         .header-inner {
           width: 100%;
-          max-width: 1180px;
+          max-width: 1240px;
           height: 100%;
           margin: 0 auto;
-          padding: 10px 20px;
+          padding: 10px 22px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 15px;
+          gap: 18px;
         }
 
         .brand {
           display: flex;
           align-items: center;
-          gap: 11px;
+          gap: 12px;
           min-width: 0;
         }
 
         .logo {
-          width: 42px;
-          height: 42px;
+          width: 44px;
+          height: 44px;
           border-radius: 10px;
           background:
             linear-gradient(
@@ -1769,25 +1859,25 @@ export default function App() {
 
         .brand-small {
           color: ${C.lime};
-          font-size: 8px;
+          font-size: 9px;
           font-weight: 800;
-          letter-spacing: 1.3px;
+          letter-spacing: 1.4px;
           text-transform: uppercase;
-          margin-bottom: 2px;
+          margin-bottom: 3px;
         }
 
         .brand h1 {
           margin: 0;
-          font-size: 19px;
+          font-size: 20px;
           line-height: 1.05;
-          font-weight: 800;
+          font-weight: 850;
           white-space: nowrap;
         }
 
         .brand p {
-          margin: 3px 0 0;
+          margin: 4px 0 0;
           color: ${C.textMuted};
-          font-size: 9px;
+          font-size: 10px;
           white-space: nowrap;
         }
 
@@ -1799,27 +1889,27 @@ export default function App() {
         .saving-text {
           position: absolute;
           right: 0;
-          top: -14px;
-          font-size: 8px;
+          top: -15px;
+          font-size: 9px;
           color: ${C.lime};
         }
 
         .admin-actions {
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
         }
 
         .admin-badge {
           display: flex;
           align-items: center;
           gap: 5px;
-          padding: 7px 9px;
+          padding: 8px 10px;
           border-radius: 8px;
           background: ${C.greenDim};
           border: 1px solid rgba(52,211,153,.22);
           color: ${C.green};
-          font-size: 9px;
+          font-size: 10px;
           font-weight: 800;
         }
 
@@ -1828,9 +1918,9 @@ export default function App() {
           border-radius: 8px;
           font-family: inherit;
           cursor: pointer;
-          padding: 7px 10px;
-          font-size: 9px;
-          font-weight: 700;
+          padding: 8px 11px;
+          font-size: 10px;
+          font-weight: 750;
         }
 
         .logout-btn {
@@ -1849,34 +1939,38 @@ export default function App() {
           color: ${C.white};
         }
 
+        /* ─────────────────────────────
+           LOGIN
+           ───────────────────────────── */
+
         .login-panel {
           position: absolute;
-          top: calc(100% + 8px);
+          top: calc(100% + 9px);
           right: 0;
-          width: 285px;
+          width: 300px;
           background: ${C.card};
           border: 1px solid ${C.border};
-          border-radius: 11px;
-          padding: 14px;
+          border-radius: 12px;
+          padding: 15px;
           box-shadow: 0 18px 50px rgba(0,0,0,.45);
           z-index: 100;
         }
 
         .login-title {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 800;
         }
 
         .login-subtitle {
           color: ${C.textMuted};
-          font-size: 9px;
+          font-size: 10px;
           margin-top: 3px;
-          margin-bottom: 10px;
+          margin-bottom: 11px;
         }
 
         .login-input {
           width: 100%;
-          padding: 8px 10px;
+          padding: 9px 10px;
           border-radius: 7px;
           border: 1px solid ${C.border};
           background: rgba(255,255,255,.045);
@@ -1888,7 +1982,7 @@ export default function App() {
 
         .login-error {
           color: ${C.red};
-          font-size: 9px;
+          font-size: 10px;
           margin-bottom: 7px;
         }
 
@@ -1900,7 +1994,7 @@ export default function App() {
         .sign-in-btn,
         .cancel-btn {
           border-radius: 7px;
-          padding: 7px 12px;
+          padding: 8px 13px;
           font-size: 10px;
           font-weight: 700;
           cursor: pointer;
@@ -1918,40 +2012,47 @@ export default function App() {
           border: 1px solid ${C.border};
         }
 
+        /* ─────────────────────────────
+           MAIN
+           ───────────────────────────── */
+
         .main {
           width: 100%;
-          max-width: 1180px;
-          min-height: calc(100dvh - 74px);
-          height: auto;
+          max-width: 1240px;
+          height: calc(100vh - 74px);
           margin: 0 auto;
-          padding: 15px 20px 20px;
-          overflow: visible;
+          padding: 16px 22px 12px;
+          overflow: hidden;
           display: flex;
           flex-direction: column;
         }
+
+        /* ─────────────────────────────
+           INTRO
+           ───────────────────────────── */
 
         .intro {
           flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          margin-bottom: 10px;
+          gap: 15px;
+          margin-bottom: 11px;
         }
 
         .intro-label {
           color: ${C.textMuted};
-          font-size: 8px;
-          font-weight: 700;
-          letter-spacing: .4px;
-          margin-bottom: 3px;
+          font-size: 9px;
+          font-weight: 750;
+          letter-spacing: .5px;
+          margin-bottom: 4px;
         }
 
         .intro h2 {
           margin: 0;
-          font-size: 20px;
+          font-size: 22px;
           line-height: 1.05;
-          font-weight: 800;
+          font-weight: 850;
           letter-spacing: -.4px;
         }
 
@@ -1961,21 +2062,25 @@ export default function App() {
 
         .manage-status {
           color: ${C.green};
-          font-size: 9px;
+          font-size: 10px;
           font-weight: 700;
         }
+
+        /* ─────────────────────────────
+           MONTH TABS
+           ───────────────────────────── */
 
         .month-tabs {
           flex-shrink: 0;
           width: 100%;
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 4px;
+          gap: 5px;
           padding: 4px;
           background: rgba(17,29,58,.75);
           border: 1px solid ${C.border};
-          border-radius: 9px;
-          margin-bottom: 9px;
+          border-radius: 10px;
+          margin-bottom: 10px;
         }
 
         .month-btn {
@@ -1983,17 +2088,27 @@ export default function App() {
           border: 1px solid transparent;
           background: transparent;
           color: ${C.textMuted};
-          padding: 7px 5px;
-          border-radius: 6px;
+          padding: 8px 6px;
+          border-radius: 7px;
           cursor: pointer;
-          font-size: 10px;
-          font-weight: 750;
+          font-size: 12px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
         }
 
-        .month-btn small {
-          opacity: .45;
-          font-size: 8px;
-          margin-left: 3px;
+        .month-name {
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .month-year {
+          font-size: 9px;
+          opacity: .5;
+          font-weight: 650;
+          padding-left: 2px;
         }
 
         .month-btn.active {
@@ -2002,30 +2117,58 @@ export default function App() {
           border-color: ${C.lime};
         }
 
+        /* ─────────────────────────────
+           ERROR
+           ───────────────────────────── */
+
         .error-box {
           flex-shrink: 0;
           background: ${C.redDim};
           border: 1px solid rgba(224,82,101,.25);
           color: ${C.red};
-          padding: 7px 10px;
+          padding: 8px 11px;
           border-radius: 7px;
-          font-size: 9px;
-          margin-bottom: 7px;
+          font-size: 10px;
+          margin-bottom: 8px;
         }
 
-        .calendar-card {
-          flex-shrink: 0;
+        /* ─────────────────────────────
+           DESKTOP WORKSPACE
+           ───────────────────────────── */
+
+        .workspace {
+          flex: 1;
+          min-height: 0;
           width: 100%;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 330px;
+          gap: 14px;
+          align-items: stretch;
+        }
+
+        .calendar-side {
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* ─────────────────────────────
+           CALENDAR
+           ───────────────────────────── */
+
+        .calendar-card {
+          min-width: 0;
           background: rgba(17,29,58,.7);
           border: 1px solid ${C.border};
-          border-radius: 11px;
+          border-radius: 12px;
           overflow: hidden;
           box-shadow: 0 15px 40px rgba(0,0,0,.16);
         }
 
         .calendar-title {
-          height: 45px;
-          padding: 7px 12px;
+          height: 49px;
+          padding: 8px 13px;
           border-bottom: 1px solid ${C.border};
           display: flex;
           justify-content: space-between;
@@ -2034,19 +2177,19 @@ export default function App() {
         }
 
         .calendar-month {
-          font-size: 13px;
-          font-weight: 800;
+          font-size: 14px;
+          font-weight: 850;
         }
 
         .calendar-hint {
           color: ${C.textMuted};
-          font-size: 8px;
-          margin-top: 2px;
+          font-size: 9px;
+          margin-top: 3px;
         }
 
         .sync-status {
           color: ${C.green};
-          font-size: 8px;
+          font-size: 9px;
           font-weight: 700;
         }
 
@@ -2061,10 +2204,10 @@ export default function App() {
           min-width: 0;
           background: ${C.card};
           text-align: center;
-          padding: 5px 2px;
+          padding: 6px 2px;
           color: ${C.textMuted};
-          font-size: 8px;
-          font-weight: 800;
+          font-size: 9px;
+          font-weight: 850;
         }
 
         .day-head.saturday {
@@ -2093,16 +2236,18 @@ export default function App() {
         .calendar-cell,
         .empty-cell {
           min-width: 0;
-          height: 73px;
+          height: 77px;
           background: ${C.card};
         }
 
         .calendar-cell {
-          padding: 5px 5px 4px;
+          padding: 6px 6px 5px;
           position: relative;
           cursor: pointer;
           overflow: hidden;
-          transition: background .12s ease;
+          transition:
+            background .12s ease,
+            transform .12s ease;
         }
 
         .calendar-cell:hover {
@@ -2126,8 +2271,8 @@ export default function App() {
         }
 
         .date-number {
-          font-size: 11px;
-          font-weight: 700;
+          font-size: 12px;
+          font-weight: 750;
           color: ${C.white};
         }
 
@@ -2145,8 +2290,8 @@ export default function App() {
         }
 
         .event-dot {
-          width: 5px;
-          height: 5px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           flex-shrink: 0;
         }
@@ -2155,17 +2300,17 @@ export default function App() {
           margin-top: 6px;
           border: 1px solid;
           border-radius: 5px;
-          padding: 4px 5px;
+          padding: 5px 6px;
           overflow: hidden;
         }
 
         .event-type {
-          font-size: 6px;
+          font-size: 7px;
           line-height: 1;
           font-weight: 900;
           text-transform: uppercase;
-          letter-spacing: .15px;
-          margin-bottom: 2px;
+          letter-spacing: .2px;
+          margin-bottom: 3px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2173,9 +2318,9 @@ export default function App() {
 
         .event-name {
           color: ${C.white};
-          font-size: 8px;
-          line-height: 1.2;
-          font-weight: 650;
+          font-size: 9px;
+          line-height: 1.25;
+          font-weight: 700;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -2185,71 +2330,98 @@ export default function App() {
 
         .no-event {
           color: ${C.textDim};
-          font-size: 7px;
+          font-size: 8px;
           opacity: .45;
-          margin-top: 16px;
+          margin-top: 17px;
         }
 
         .event-line {
           position: absolute;
-          left: 5px;
-          right: 5px;
+          left: 6px;
+          right: 6px;
           bottom: 3px;
           height: 2px;
           border-radius: 2px;
         }
 
+        /* ─────────────────────────────
+           LEGEND
+           ───────────────────────────── */
+
         .legend {
           flex-shrink: 0;
           display: flex;
           align-items: center;
-          gap: 9px;
+          gap: 12px;
           flex-wrap: wrap;
-          margin: 6px 2px;
+          margin: 7px 2px 0;
           color: ${C.textMuted};
-          font-size: 7px;
+          font-size: 8px;
         }
 
         .legend-item {
           display: flex;
           align-items: center;
-          gap: 3px;
+          gap: 4px;
           white-space: nowrap;
         }
 
         .legend-item i {
-          width: 9px;
+          width: 10px;
           height: 2px;
           border-radius: 2px;
         }
 
+        /* ─────────────────────────────
+           DETAIL PANEL
+           ───────────────────────────── */
+
         .detail-panel {
           width: 100%;
-          flex: none;
-          min-height: 110px;
-          overflow: visible;
+          min-width: 0;
+          min-height: 0;
+          overflow: auto;
           background: ${C.card};
           border: 1px solid ${C.border};
-          border-radius: 10px;
-          padding: 12px 14px;
+          border-radius: 12px;
+          padding: 17px;
+          box-shadow: 0 15px 40px rgba(0,0,0,.12);
+        }
+
+        .detail-empty {
+          padding-top: 12px;
+        }
+
+        .detail-icon {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: ${C.limeDim};
+          color: ${C.lime};
+          font-size: 18px;
+          font-weight: 500;
+          margin-bottom: 11px;
         }
 
         .detail-title {
-          font-size: 11px;
-          font-weight: 800;
+          font-size: 13px;
+          font-weight: 850;
         }
 
         .detail-muted {
-          margin: 4px 0 0;
+          margin: 5px 0 0;
           color: ${C.textMuted};
-          font-size: 9px;
-          line-height: 1.45;
+          font-size: 10px;
+          line-height: 1.5;
         }
 
         .detail-date {
           color: ${C.lime};
-          font-size: 9px;
-          font-weight: 800;
+          font-size: 10px;
+          font-weight: 850;
         }
 
         .detail-header {
@@ -2260,21 +2432,24 @@ export default function App() {
         }
 
         .detail-header h3 {
-          margin: 3px 0 0;
-          font-size: 15px;
-          font-weight: 800;
+          margin: 5px 0 0;
+          font-size: 17px;
+          line-height: 1.2;
+          font-weight: 850;
+          word-break: break-word;
         }
 
         .detail-actions {
           display: flex;
           gap: 5px;
+          flex-shrink: 0;
         }
 
         .edit-btn,
         .delete-btn {
           border-radius: 6px;
-          padding: 5px 9px;
-          font-size: 8px;
+          padding: 6px 9px;
+          font-size: 9px;
           font-weight: 750;
           cursor: pointer;
         }
@@ -2291,18 +2466,22 @@ export default function App() {
           border: none;
         }
 
+        /* ─────────────────────────────
+           TAGS
+           ───────────────────────────── */
+
         .tags {
           display: flex;
-          gap: 4px;
+          gap: 5px;
           flex-wrap: wrap;
-          margin-top: 7px;
+          margin-top: 10px;
         }
 
         .tag {
-          padding: 3px 7px;
+          padding: 4px 8px;
           border-radius: 20px;
-          font-size: 7px;
-          font-weight: 750;
+          font-size: 8px;
+          font-weight: 800;
         }
 
         .muted-tag {
@@ -2321,35 +2500,38 @@ export default function App() {
         }
 
         .description {
-          margin: 7px 0 0;
+          margin: 10px 0 0;
           color: ${C.textMuted};
-          font-size: 9px;
-          line-height: 1.5;
-          max-width: 800px;
+          font-size: 10px;
+          line-height: 1.55;
         }
 
+        /* ─────────────────────────────
+           ADMIN TOOLS
+           ───────────────────────────── */
+
         .admin-tools {
-          margin-top: 8px;
-          padding-top: 7px;
+          margin-top: 14px;
+          padding-top: 11px;
           border-top: 1px solid ${C.border};
         }
 
         .tools-title {
           color: ${C.textDim};
-          font-size: 7px;
-          font-weight: 800;
+          font-size: 8px;
+          font-weight: 850;
           text-transform: uppercase;
-          letter-spacing: .5px;
-          margin-bottom: 5px;
+          letter-spacing: .6px;
+          margin-bottom: 7px;
         }
 
         .move-row {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
           flex-wrap: wrap;
           color: ${C.textMuted};
-          font-size: 8px;
+          font-size: 9px;
         }
 
         .move-month,
@@ -2358,9 +2540,9 @@ export default function App() {
           background: rgba(255,255,255,.045);
           color: ${C.white};
           border-radius: 6px;
-          padding: 5px 7px;
+          padding: 6px 7px;
           outline: none;
-          font-size: 8px;
+          font-size: 9px;
         }
 
         .move-month {
@@ -2368,7 +2550,7 @@ export default function App() {
         }
 
         .move-day {
-          width: 50px;
+          width: 52px;
         }
 
         .move-btn {
@@ -2376,21 +2558,25 @@ export default function App() {
           background: transparent;
           color: ${C.white};
           border-radius: 6px;
-          padding: 5px 9px;
-          font-size: 8px;
+          padding: 6px 10px;
+          font-size: 9px;
           font-weight: 750;
           cursor: pointer;
         }
 
+        /* ─────────────────────────────
+           EMPTY EVENT
+           ───────────────────────────── */
+
         .empty-title {
-          margin-top: 3px;
-          font-size: 13px;
-          font-weight: 800;
+          margin-top: 5px;
+          font-size: 14px;
+          font-weight: 850;
         }
 
         .add-event-btn {
-          margin-top: 7px;
-          padding: 6px 11px;
+          margin-top: 10px;
+          padding: 7px 12px;
           background: ${C.lime};
           color: ${C.navy};
           border: none;
@@ -2400,27 +2586,32 @@ export default function App() {
           cursor: pointer;
         }
 
+        /* ─────────────────────────────
+           FORM
+           ───────────────────────────── */
+
         .form-heading {
-          margin-bottom: 7px;
+          margin-bottom: 10px;
         }
 
         .form-label {
           color: ${C.lime};
           font-size: 8px;
-          font-weight: 800;
+          font-weight: 850;
+          letter-spacing: .3px;
         }
 
         .form-date {
-          margin-top: 2px;
-          font-size: 13px;
-          font-weight: 800;
+          margin-top: 3px;
+          font-size: 14px;
+          font-weight: 850;
         }
 
         .form-grid {
-          max-width: 700px;
+          width: 100%;
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 6px;
+          grid-template-columns: 1fr;
+          gap: 7px;
         }
 
         .form-input {
@@ -2430,25 +2621,26 @@ export default function App() {
           background: rgba(255,255,255,.045);
           color: ${C.white};
           border-radius: 6px;
-          padding: 7px 8px;
+          padding: 8px 9px;
           font-size: 9px;
           outline: none;
         }
 
         .form-input.full {
-          grid-column: 1 / -1;
+          grid-column: 1;
         }
 
         .textarea {
           resize: none;
+          min-height: 82px;
         }
 
         .office-check {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
           color: ${C.textMuted};
-          font-size: 8px;
+          font-size: 9px;
         }
 
         .form-buttons {
@@ -2456,15 +2648,16 @@ export default function App() {
           justify-content: flex-end;
           align-items: center;
           gap: 5px;
+          margin-top: 2px;
         }
 
         .cancel-form-btn,
         .delete-form-btn,
         .save-form-btn {
           border-radius: 6px;
-          padding: 6px 9px;
+          padding: 7px 10px;
           font-size: 8px;
-          font-weight: 750;
+          font-weight: 800;
           cursor: pointer;
         }
 
@@ -2484,14 +2677,18 @@ export default function App() {
           border: none;
           background: ${C.lime};
           color: ${C.navy};
-          font-weight: 850;
+          font-weight: 900;
         }
+
+        /* ─────────────────────────────
+           FOOTER
+           ───────────────────────────── */
 
         .footer-note {
           flex-shrink: 0;
-          margin-top: 5px;
+          margin-top: 7px;
           color: ${C.textDim};
-          font-size: 7px;
+          font-size: 8px;
           line-height: 1.3;
         }
 
@@ -2499,54 +2696,37 @@ export default function App() {
           color: ${C.textMuted};
         }
 
-        @media (max-width: 800px) {
+        /* =====================================================
+           TABLET
+           ===================================================== */
 
-          .header {
-            height: 68px;
-          }
+        @media (max-width: 1000px) {
 
-          .main {
-            min-height: calc(100dvh - 68px);
-            height: auto;
-            padding: 10px 12px 14px;
-          }
-
-          .brand p {
-            display: none;
-          }
-
-          .brand h1 {
-            font-size: 17px;
-          }
-
-          .logo {
-            width: 38px;
-            height: 38px;
-          }
-
-          .intro h2 {
-            font-size: 18px;
+          .workspace {
+            grid-template-columns: minmax(0, 1fr) 290px;
+            gap: 10px;
           }
 
           .calendar-cell,
           .empty-cell {
-            height: 68px;
+            height: 70px;
           }
 
           .event-name {
-            font-size: 7px;
-          }
-
-          .event-type {
-            font-size: 5.5px;
+            font-size: 8px;
           }
 
           .detail-panel {
-            padding: 10px 12px;
+            padding: 13px;
           }
+
         }
 
-        @media (max-width: 560px) {
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @media (max-width: 760px) {
 
           html,
           body,
@@ -2554,6 +2734,9 @@ export default function App() {
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
+          }
+
+          body {
             overflow-y: auto;
           }
 
@@ -2566,33 +2749,30 @@ export default function App() {
           }
 
           .header {
-            height: 61px;
+            height: 64px;
           }
 
           .header-inner {
-            padding: 7px 9px;
-            gap: 6px;
+            padding: 7px 10px;
+            gap: 7px;
           }
 
           .brand {
-            gap: 7px;
-            min-width: 0;
+            gap: 8px;
           }
 
           .logo {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
           }
 
           .brand-small {
-            font-size: 6px;
+            font-size: 6.5px;
             letter-spacing: .8px;
           }
 
           .brand h1 {
-            font-size: 14px;
-            letter-spacing: -.2px;
+            font-size: 15px;
           }
 
           .brand p {
@@ -2600,60 +2780,51 @@ export default function App() {
           }
 
           .admin-btn {
-            padding: 6px 8px !important;
-            font-size: 8px !important;
+            padding: 6px 8px;
+            font-size: 8px;
           }
 
           .admin-badge {
-            padding: 5px 7px;
+            padding: 6px 7px;
             font-size: 7px;
           }
 
           .logout-btn {
-            padding: 5px 7px !important;
-            font-size: 7px !important;
+            padding: 6px 7px;
+            font-size: 7px;
           }
 
           .login-panel {
             position: fixed;
-            top: 57px;
+            top: 59px;
             left: 8px;
             right: 8px;
             width: auto;
             max-width: none;
-            padding: 12px;
+            padding: 13px;
             border-radius: 10px;
-          }
-
-          .login-title {
-            font-size: 12px;
-          }
-
-          .login-input {
-            padding: 8px;
-            font-size: 10px;
           }
 
           .main {
             width: 100%;
             max-width: 100%;
-            min-height: calc(100dvh - 61px);
+            min-height: calc(100dvh - 64px);
             height: auto;
-            padding: 7px 7px 14px;
+            padding: 10px 8px 15px;
             overflow: visible;
           }
 
           .intro {
-            margin-bottom: 6px;
+            margin-bottom: 7px;
           }
 
           .intro-label {
-            font-size: 6px;
-            margin-bottom: 2px;
+            font-size: 7px;
+            margin-bottom: 3px;
           }
 
           .intro h2 {
-            font-size: 14px;
+            font-size: 15px;
           }
 
           .manage-status {
@@ -2663,24 +2834,40 @@ export default function App() {
           .month-tabs {
             gap: 2px;
             padding: 3px;
-            margin-bottom: 6px;
+            margin-bottom: 7px;
           }
 
           .month-btn {
-            padding: 6px 2px;
-            font-size: 8px;
+            padding: 7px 2px;
+            gap: 5px;
           }
 
-          .month-btn small {
-            display: none;
+          .month-name {
+            font-size: 9px;
+          }
+
+          .month-year {
+            font-size: 7px;
+          }
+
+          .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: none;
+          }
+
+          .calendar-side {
+            width: 100%;
           }
 
           .calendar-card {
-            border-radius: 8px;
+            width: 100%;
+            border-radius: 9px;
           }
 
           .calendar-title {
-            height: 38px;
+            height: 40px;
             padding: 5px 8px;
           }
 
@@ -2689,15 +2876,16 @@ export default function App() {
           }
 
           .calendar-hint {
-            font-size: 6px;
+            font-size: 6.5px;
+            margin-top: 2px;
           }
 
           .sync-status {
-            font-size: 6px;
+            font-size: 6.5px;
           }
 
           .day-head {
-            padding: 4px 1px;
+            padding: 5px 1px;
             font-size: 7px;
           }
 
@@ -2711,7 +2899,7 @@ export default function App() {
 
           .calendar-cell,
           .empty-cell {
-            height: 57px;
+            height: 59px;
           }
 
           .calendar-cell {
@@ -2734,18 +2922,18 @@ export default function App() {
           }
 
           .event-type {
-            font-size: 4.5px;
+            font-size: 4.8px;
             margin-bottom: 1px;
           }
 
           .event-name {
-            font-size: 6px;
+            font-size: 6.5px;
             line-height: 1.15;
           }
 
           .no-event {
             font-size: 6px;
-            margin-top: 11px;
+            margin-top: 12px;
           }
 
           .event-line {
@@ -2756,116 +2944,123 @@ export default function App() {
           }
 
           .legend {
-            gap: 6px;
-            margin: 4px 1px;
-            font-size: 6px;
+            gap: 7px;
+            margin: 5px 1px 0;
+            font-size: 6.5px;
           }
 
           .legend-item {
-            gap: 2px;
+            gap: 3px;
           }
 
           .legend-item i {
-            width: 7px;
+            width: 8px;
           }
 
+          /* DETAIL BELOW CALENDAR */
+
           .detail-panel {
-            padding: 8px 9px;
-            border-radius: 8px;
+            width: 100%;
+            min-height: 120px;
+            max-height: none;
+            overflow: visible;
+            padding: 11px;
+            border-radius: 9px;
+          }
+
+          .detail-empty {
+            padding-top: 3px;
+          }
+
+          .detail-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 16px;
+            margin-bottom: 7px;
           }
 
           .detail-title {
-            font-size: 10px;
+            font-size: 11px;
           }
 
           .detail-muted {
-            font-size: 7px;
-            line-height: 1.35;
+            font-size: 7.5px;
+            line-height: 1.4;
           }
 
           .detail-date {
-            font-size: 7px;
+            font-size: 7.5px;
           }
 
           .detail-header h3 {
-            font-size: 12px;
-          }
-
-          .detail-actions {
-            gap: 3px;
+            font-size: 13px;
+            margin-top: 3px;
           }
 
           .edit-btn,
           .delete-btn {
-            padding: 4px 7px;
+            padding: 5px 7px;
             font-size: 7px;
           }
 
           .tags {
-            margin-top: 5px;
+            margin-top: 6px;
             gap: 3px;
           }
 
           .tag {
-            padding: 2px 5px;
+            padding: 3px 6px;
             font-size: 6px;
           }
 
           .description {
-            margin-top: 5px;
-            font-size: 7px;
-            line-height: 1.35;
-            max-height: 31px;
-            overflow: hidden;
+            margin-top: 6px;
+            font-size: 7.5px;
+            line-height: 1.4;
           }
 
           .admin-tools {
-            margin-top: 5px;
-            padding-top: 5px;
+            margin-top: 8px;
+            padding-top: 7px;
           }
 
           .tools-title {
             font-size: 6px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
           }
 
           .move-row {
-            gap: 3px;
+            gap: 4px;
             font-size: 7px;
           }
 
           .move-month,
           .move-day,
           .move-btn {
-            padding: 4px 5px;
+            padding: 5px 6px;
             font-size: 7px;
           }
 
           .move-month {
-            width: 83px;
+            width: 88px;
           }
 
           .move-day {
-            width: 43px;
-          }
-
-          .move-btn {
-            padding-left: 7px;
-            padding-right: 7px;
+            width: 44px;
           }
 
           .empty-title {
-            font-size: 11px;
+            font-size: 12px;
           }
 
           .add-event-btn {
-            margin-top: 5px;
-            padding: 5px 8px;
+            margin-top: 6px;
+            padding: 6px 9px;
             font-size: 7px;
           }
 
           .form-heading {
-            margin-bottom: 5px;
+            margin-bottom: 6px;
           }
 
           .form-label {
@@ -2877,16 +3072,17 @@ export default function App() {
           }
 
           .form-grid {
-            gap: 4px;
+            gap: 5px;
           }
 
           .form-input {
-            padding: 6px;
+            padding: 7px;
             font-size: 7px;
           }
 
           .textarea {
-            height: 40px;
+            min-height: 55px;
+            height: 55px;
           }
 
           .office-check {
@@ -2900,7 +3096,7 @@ export default function App() {
           .cancel-form-btn,
           .delete-form-btn,
           .save-form-btn {
-            padding: 5px 7px;
+            padding: 6px 8px;
             font-size: 7px;
           }
 
@@ -2909,37 +3105,59 @@ export default function App() {
           }
         }
 
+        /* =====================================================
+           SMALL MOBILE
+           ===================================================== */
+
         @media (max-width: 380px) {
 
-          .brand h1 {
-            font-size: 12px;
+          .header {
+            height: 61px;
+          }
+
+          .main {
+            min-height: calc(100dvh - 61px);
+            padding-left: 6px;
+            padding-right: 6px;
           }
 
           .logo {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
+          }
+
+          .brand h1 {
+            font-size: 13px;
           }
 
           .admin-btn {
-            font-size: 7px !important;
-            padding: 5px 6px !important;
+            font-size: 7px;
+            padding: 5px 6px;
           }
 
           .intro h2 {
-            font-size: 12px;
+            font-size: 13px;
+          }
+
+          .month-name {
+            font-size: 8px;
+          }
+
+          .month-year {
+            font-size: 6px;
           }
 
           .calendar-cell,
           .empty-cell {
-            height: 52px;
+            height: 54px;
           }
 
           .event-name {
-            font-size: 5.5px;
+            font-size: 5.7px;
           }
 
           .event-type {
-            font-size: 4px;
+            font-size: 4.2px;
           }
 
           .date-number {
@@ -2947,11 +3165,13 @@ export default function App() {
           }
 
           .detail-panel {
-            padding: 7px;
+            padding: 8px;
           }
+
         }
 
       `}</style>
+
     </div>
   );
 }
