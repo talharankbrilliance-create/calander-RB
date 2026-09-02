@@ -1705,14 +1705,6 @@ export default function App() {
 
         </div>
 
-        <div className="footer-note">
-          <strong>
-            RB Office Calendar
-          </strong>{" "}
-          — Meetings, office activities,
-          travel, important dates and national
-          events.
-        </div>
 
       </main>
 
