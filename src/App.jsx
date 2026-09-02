@@ -1242,41 +1242,6 @@ export default function App() {
 
             </section>
 
-            {/* LEGEND */}
-            <div className="legend">
-
-              {[
-                [C.lime, "Official"],
-                [C.green, "Office"],
-                [C.purple, "Meeting"],
-                [C.orange, "Travel"],
-                [C.red, "Important"],
-                [C.blue, "Custom"],
-              ].map(
-                ([color, label]) => (
-
-                  <span
-                    key={label}
-                    className="legend-item"
-                  >
-
-                    <i
-                      style={{
-                        background: color,
-                      }}
-                    />
-
-                    {label}
-
-                  </span>
-
-                )
-              )}
-
-            </div>
-
-          </div>
-
           {/* =====================================================
               RIGHT SIDE DETAIL PANEL
               ===================================================== */}
@@ -1707,6 +1672,32 @@ export default function App() {
               </div>
 
             )}
+
+          <div className="detail-legend">
+
+            <div className="detail-legend-title">
+              Event Types
+            </div>
+
+            <div className="detail-legend-items">
+              {[
+                [C.lime, "Official"],
+                [C.green, "Office"],
+                [C.purple, "Meeting"],
+                [C.orange, "Travel"],
+                [C.red, "Important"],
+                [C.blue, "Custom"],
+              ].map(
+                ([color, label]) => (
+                  <span key={label} className="detail-legend-item">
+                    <i style={{ background: color }} />
+                    {label}
+                  </span>
+                )
+              )}
+            </div>
+
+          </div>
 
           </section>
 
@@ -2345,31 +2336,47 @@ export default function App() {
         }
 
         /* ─────────────────────────────
-           LEGEND
+           LEGEND INSIDE DETAIL PANEL
            ───────────────────────────── */
 
-        .legend {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin: 7px 2px 0;
-          color: ${C.textMuted};
-          font-size: 8px;
+        .detail-legend {
+          width: 100%;
+          margin-top: 18px;
+          padding-top: 14px;
+          border-top: 1px solid ${C.border};
         }
 
-        .legend-item {
+        .detail-legend-title {
+          margin-bottom: 10px;
+          color: ${C.white};
+          font-size: 11px;
+          font-weight: 850;
+          letter-spacing: .3px;
+        }
+
+        .detail-legend-items {
           display: flex;
           align-items: center;
-          gap: 4px;
+          flex-wrap: wrap;
+          gap: 9px 15px;
+        }
+
+        .detail-legend-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: ${C.textMuted};
+          font-size: 9px;
+          font-weight: 700;
           white-space: nowrap;
         }
 
-        .legend-item i {
-          width: 10px;
-          height: 2px;
-          border-radius: 2px;
+        .detail-legend-item i {
+          width: 12px;
+          height: 3px;
+          flex: 0 0 12px;
+          border-radius: 3px;
+          display: inline-block;
         }
 
         /* ─────────────────────────────
@@ -2943,18 +2950,29 @@ export default function App() {
             height: 1.5px;
           }
 
-          .legend {
-            gap: 7px;
-            margin: 5px 1px 0;
-            font-size: 6.5px;
+          .detail-legend {
+            margin-top: 14px;
+            padding-top: 11px;
           }
 
-          .legend-item {
-            gap: 3px;
+          .detail-legend-title {
+            margin-bottom: 8px;
+            font-size: 9px;
           }
 
-          .legend-item i {
-            width: 8px;
+          .detail-legend-items {
+            gap: 7px 11px;
+          }
+
+          .detail-legend-item {
+            gap: 4px;
+            font-size: 7px;
+          }
+
+          .detail-legend-item i {
+            width: 9px;
+            height: 2px;
+            flex-basis: 9px;
           }
 
           /* DETAIL BELOW CALENDAR */
