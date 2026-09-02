@@ -3181,8 +3181,16 @@ export default function App() {
           }
 
         }
+              .detail-panel {
+  height: 330px !important;
+  min-height: 0 !important;
+  max-height: 330px !important;
+  overflow-y: auto !important;
+}
 
-      `}</style>
+      `}
+
+      </style>
 
     </div>
   );
