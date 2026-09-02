@@ -3187,6 +3187,13 @@ export default function App() {
   max-height: 330px !important;
   overflow-y: auto !important;
 }
+@media (max-width: 768px) {
+  .detail-panel {
+    height: auto !important;
+    max-height: 220px !important;
+    min-height: 0 !important;
+  }
+}
 
       `}
 
