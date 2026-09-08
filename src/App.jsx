@@ -16,7 +16,7 @@ import {
 
 const APPWRITE_ENDPOINT = "https://fra.cloud.appwrite.io/v1";
 const APPWRITE_PROJECT_ID = "6a9698ce00010509b898";
-const DATABASE_ID = "database-6a969bf50001918a6620";
+const DATABASE_ID = "6a969bf50001918a6620";
 const TABLE_ID = "events";
 
 const client = new Client()
